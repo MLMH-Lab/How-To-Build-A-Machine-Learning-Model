@@ -46,7 +46,7 @@ X = data.iloc[:,4:]
 #  - Confounding variables
 #  - Missing data 
 
-# 3.1. Data imbalance with respect to the labels
+# 3.1. Class imbalance
 # First, let's check the number of total participants, features and number of participants in each class.  
 print("")
 print("Total N:", len(y))
@@ -204,7 +204,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
 #  5. The model is fit to the remaining features
 #  6. Steps 2-5 are repeated until the desired number of features has been reached
 # From the description above, it follows that the implementation of RFE relies on two hyperparameters: a) step - the number of features to remove in step 4, b) n_features_to_select - the final number of desired features. For simplicity, we will keep these hyperparameters with their default values: step = 1 and n_features_to_select = half of the features = 85.   
-# RFE is embedded in the model training, i.e. the selection of the ..., therefore, the implementation will be part of the model training section. 
+#Recall that feature selection should be done within the CV. Thefore, RFE will be be implementated in the model training section. 
 # FIX: add RFE
     
     
@@ -238,8 +238,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     grid_clf = GridSearchCV(estimator=clf, param_grid=param_grid, cv=internal_cv, scoring=grid_scorer, verbose=1)
 
 # We are now ready to fit our SVM model to the training data. We do this by applying the fit command to the features and labels from the training set. 
-    grid_result = grid_clf.fit(X_train_n, y_train) 
-    # FIX: this runs but it is giving me a "Convergence Warning" and I don't know why..
+    grid_result = grid_clf.fit(X_train_n, y_train) #FIX: this runs but it is giving me a "Convergence Warning" and I don't know why..
 
 # The code below shows how GridSearch works: we can see the performance for the different values of C in the validation set within the inner CV. 
     print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
@@ -256,7 +255,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     y_predicted = clf2.predict(X_test_n)
 
 
-# Once we have the predicted labels, we can now estimate the performance in the test set. First, we compute the confusion matrix. From here, we estimate balanced accuracy, sensitivity, specificity and error rate. There are plenty more metrics to choose from in sklearn. For a comprehensive list see ...
+# Once we have the predicted labels, we can now estimate the performance in the test set. First, we compute the confusion matrix. From here, we estimate balanced accuracy, sensitivity, specificity and error rate. There are plenty more metrics to choose from in sklearn. For a comprehensive list see https://scikit-learn.org/stable/modules/model_evaluation.html.
     print("Confusion matrix")
     cm = confusion_matrix(y_test, y_predicted)
     print(cm)
@@ -350,7 +349,6 @@ plot_coefs(coefficients)
 # The bar plot above shows the most important features to classify a participant as a patient (positive weighted features) and as a control (negative weighted features). For example, a large third ventricle was more associated with patients. - CHECK IF THIS INTERPRETATION IS CORRECT
 # 7.2. Permutation testing FIX:should this be a seperate file??
 # EXPLAIN CODE HERE IF THIS IS THE FINAL CODE
-from sklearn.base import clone
 
 models = []
 for i in range(n_folds):
@@ -364,6 +362,8 @@ best_BAC = pickle.load(f)
 f.close()
 
 # EXPLAIN NEXT CODE HERE IF THIS IS THE FINAL CODE
+
+from sklearn.base import clone
 seed=1
 n_permutation = 5
 permutation_test_bac = np.zeros((n_permutation,))
