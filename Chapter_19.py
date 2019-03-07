@@ -12,16 +12,11 @@ warnings.filterwarnings('ignore')
 from pathlib import Path
 experiment_name = "example"
 Path("./results/%s/" % experiment_name).mkdir(exist_ok=True, parents=True)
-    os.makedirs("./results/" + experiment_name + "/")
-
-
 # ======================================================================================================================
 # 2. DEFINE YOUR PROBLEM
 # The first step in your machine learning pipeline is to define your problem. To do this you will need to first load
 # your data and then define feature set X and the corresponding labels y.
 #
-
-# ======================================================================================================================
 # 2.1. Loading the data
 # In this example, we will use tabular data with features as columns and rows as participants. The data are saved as
 # a csv file. We will use the library pandas to load and explore the data. The first thing we need to do is import the
@@ -34,7 +29,6 @@ Path("./results/%s/" % experiment_name).mkdir(exist_ok=True, parents=True)
 # ======================================================================================================================
 import pandas as pd
 data = pd.read_csv("./Chapter_19_data.csv", index_col='ID')  # Use ID as index
-
 # ======================================================================================================================
 # Let's start by seeing the first six rows of the data. Selecting subsections ("slicing") of a dataframe using pandas is
 # straightforward. There are different ways to do this. Here, we use loc to select the first five rows (note that the
@@ -42,7 +36,6 @@ data = pd.read_csv("./Chapter_19_data.csv", index_col='ID')  # Use ID as index
 # data.head(n=6) would give the sample result.
 # ======================================================================================================================
 data[0:6]  # The other way would work only with numeric indexes.
-
 # ======================================================================================================================
 # We can see the features names at the top and the data for the first six participants. Features include the ID, age and
 # gender, as well as the gray matter volume for several brain regions. We can see that there is at least one value
@@ -50,7 +43,6 @@ data[0:6]  # The other way would work only with numeric indexes.
 # do this, we simply ask for the names of the columns of our data.
 # ======================================================================================================================
 data.columns.values
-
 # ======================================================================================================================
 # Now that we know what features we are dealing with, let's check the size of the data.
 # ======================================================================================================================
@@ -58,8 +50,6 @@ shape = data.shape
 print("")
 print("Number of features=", shape[1])
 print("Number of participants =", shape[0])
-
-
 # ======================================================================================================================
 # 2.2. Define your feature set and target
 # The target is a categorical variable that determines whether a participant belongs to the HC and SZ group. Therefore,
@@ -73,8 +63,6 @@ print("Number of participants =", shape[0])
 # ======================================================================================================================
 y = data["label"]
 X = data.iloc[:, 4:]
-
-
 # ======================================================================================================================
 # 3. PREPARE YOUR DATA
 # In this step we want to get our data ready before we start analyse it. This can involve different analyses depending
@@ -84,8 +72,6 @@ X = data.iloc[:, 4:]
 #  - Confounding variables
 #  - Missing data
 #
-
-# ======================================================================================================================
 # 3.1. Class imbalance
 # First, let's check the number of total participants, features and number of participants in each class.
 # ======================================================================================================================
@@ -94,7 +80,6 @@ print("Total\n  N:", len(y))
 print("  N features:", len(X.columns))
 print("  N SZ:", len(y[y == 0]))
 print("  N HC:", len(y[y == 1]))
-
 # ======================================================================================================================
 # From the output we can see that there are 955 participants in total, 444 patients and 511 controls. There does not
 # seem to be a large imbalance between classes. However, they are not perfectly matched. One option would be to
@@ -102,8 +87,6 @@ print("  N HC:", len(y[y == 1]))
 # large, we will use balanced accuracy as our metric of choice as well as stratified CV to ensure the same proportion
 # AD/HC across the CV iterations.
 #
-
-# ======================================================================================================================
 # 3.2. Confounding variables
 # Next, let's check for balance of some obvious confounding variables: gender and age. First, let's see the distribution
 # of gender between the two classes. This time, we will use some plots from the seaborn library. Plotting data using
@@ -119,13 +102,10 @@ plt.show()
 # be used.
 # FIX: legend replace numbers with "Male" and "Female"
 # ======================================================================================================================
-
-# ======================================================================================================================
 # We can see that there is a fairly similar distribution of males and females in the two classes. Therefore, we will not
 # consider gender as a significant confounder.
 # Next, let's check for any imbalance with respect to age by retrieve the mean value and standard deviation.
 # ======================================================================================================================
-
 mean = (data.groupby("label")["Age"].mean()).round(1)
 sd = (data.groupby("label")["Age"].std()).round(1)
 print("")
@@ -142,9 +122,6 @@ data.hist('Age', by='label', sharex=True, sharey=True, bins=20, figsize=(15, 5))
 # residuals as the new features. For more information on confounding variables in neuroimaging and machine learning
 # learning see Rao et al., 2017.
 #
-
-
-# ======================================================================================================================
 # 3.3. Missing data
 # Many machine learning algorithms do not support data with missing values. Therefore it is important to check if there
 # are any missing values in our data. There are many different ways to do this. Here we will build our own function to
@@ -186,23 +163,16 @@ detect_nan(data)
 # FIX: At the moment thre is no missing data. I will remove some data to make it more interesting. This code works well
 # but I think it is probably overly complicated...if you could find a cool way to simplify it, it would be great!
 #
-
-
-# ======================================================================================================================
 # 4. FEATURE ENGINEERING
 # In this step, we want to make all the necessary transformations to our data that can help us build a good model. As
 # described in Chapter 2, this can involve different procedures depending on the nature of the data. In this example, we
 # want to use neuroanatomical data to classify SZ and HC.
 #
-
-# ======================================================================================================================
 # 4.1. Feature extraction
 # This first step involves extracting brain morphometric information from the raw MRI images. Luckily, this step has
 # already been done for us. The regional grey matter volumes that make up our data X have been extracted with FreeSurfer
 # (REF).
 #
-
-# ======================================================================================================================
 # 4.2. Cross-validation
 # Before we move on to apply any transformations to our feature set X, we need to split the data into train and test
 # sets. Recall that this is a critical step to ensure independence between the training and test sets. There are
@@ -215,8 +185,6 @@ detect_nan(data)
 # ======================================================================================================================
 X = X.values.astype('float32')
 y = y.values.astype('float32')
-y = np.asarray(y.values, dtype='float32')
-
 # ======================================================================================================================
 # Then, we define the parameters of our stratified CV scheme using the function StratifiedKFold from the sklearn
 # library, and assign it to the variable skf.
@@ -235,7 +203,6 @@ y = np.asarray(y.values, dtype='float32')
 from sklearn.model_selection import StratifiedKFold
 n_folds = 10
 skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=1)
-
 # ======================================================================================================================
 # Now that the CV is defined, we can loop over each one of the 10 train/test set iterations. At each iteration, we will
 # transform and fit the machine learning algorithm to the training set; and apply the same data transformations and test
@@ -251,66 +218,96 @@ skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=1)
 # coefficients. This is where we will store the weights (coefficient or "importance") from each feature across the CV
 # iterations. Once the CV is finished, we can then calculate the average weight of each feature for the task.
 # ======================================================================================================================
-cv_test_bac = np.zeros((n_folds,))
-cv_test_sens = np.zeros((n_folds,))
-cv_test_spec = np.zeros((n_folds,))
-cv_error_rate = np.zeros((n_folds,))
-coefficients = []
+# We do not import or define functions inside loop, it add big overload to the code.
+import numpy as np
+from sklearn.preprocessing import Imputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import make_scorer
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import LinearSVC
+import csv
+import pickle
 
-for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
-    X_train, X_test = X[train_index], X[test_index]
-    y_train, y_test = y[train_index], y[test_index]
 
-    # ==================================================================================================================
-    # Let's check how many participants there are in the train and test sets in each iteration of the CV. We can do
-    # this by simply asking for the length of y.
-    # ==================================================================================================================
+def balanced_accuracy_score(actual, prediction):
+    cm = confusion_matrix(actual, prediction)
+    bac = np.sum(np.true_divide(np.diagonal(cm), np.sum(cm, axis=1))) / cm.shape[1]
+    return bac
+
+# comment:
+# I recommend braking the commented chunks in functions. I will do it here so you see if it is clear enough.
+# The idea is to move the cross validation explanation to just before the for loop and use the functios to explain
+# each concept indiviadually. As if you were runing it a single time. Than you explain cross validation and run it in
+# loop.
+# Here I used docstrings to insert explanations on the functions, but it can be done in markdown in the jupyter or
+# in comments here.
+
+
+def check_number_of_participants(i_fold, y_train, y_test):
+    """Check how many participants there are in the train and test sets.
+
+    Let's check how many participants there are in the train and test sets in each iteration of the CV. We can do
+    this by simply asking for the length of y.
+    """
     print("")
     print("k-fold: ", i_fold + 1)
     print("N training set:", len(y_train))
     print("N test set:", len(y_test))
     print("")
 
-    # ==================================================================================================================
-    # 4.3. Data imputation
-    # As we saw before, it was decided to use imputation to fill in the missing data for the feature Left Lateral
-    # Ventricle. There are several methods to implement this. In this example, we use the function Imputer from sklearn
-    # to 1) compute the mean value for this feature in the training set, and
-    # 2) replace all the missing values in the training and
-    # 3) test sets with the same mean value.
-    # ==================================================================================================================
-    from sklearn.preprocessing import Imputer
+
+def data_imputation(X_train, X_test):
+    """4.3. Data imputation.
+
+    As we saw before, it was decided to use imputation to fill in the missing data for the feature Left Lateral
+    Ventricle.
+    There are several methods to implement this. In this example, we use the function Imputer from sklearn to
+    1) compute the mean value for this feature in the training set, and
+    2) replace all the missing values in the training and
+    3) test sets with the same mean value.
+    """
     imputer = Imputer(missing_values='NaN', strategy='mean', axis=1)
     imputer = imputer.fit(X_train)
     X_train = imputer.transform(X_train)
     X_test = imputer.transform(X_test)
 
-    # ==================================================================================================================
-    # 4.4. Feature scaling/normalisation
-    # Before making any transformation to our data, we want to make sure that the fact that different regions of the
-    # brain have different ranges will not affect our model. For example, the hippocampus will tend to be larger than
-    # the thalamus. If we keep the original values, the algorithm may mistakenly conclude that the hippocampus will be
-    # less important than region the thalamus. - IS THIS CORRECT?
-    # There are several possible solutions to avoid this and other related issues. In this example, we will transform
-    # the data in such a way that the distribution of each feature will resemble a normal distribution (e.g. mean=0 and
-    # standard-deviation=1). Each new normalised value z is calculated by taking each data point xi, subtracting the
-    # mean x_ and then dividing it by the standard-deviation sd of the same feature:
-    #
-    # zxi = (x_featureA - xi) / sdfeatureA
-    #
-    # The code below normalises each feature independently using the function StandardScaler from sklearn.
-    # First, we fit the function StandardScaler to the train set and store the parameters - x_ and sd - in the variable
-    # scaler. Then, we transform both the train and test set using the formula above with the stored parameters.
-    # ==================================================================================================================
-    from sklearn.preprocessing import StandardScaler
+
+def data_normalization(X_train, X_test):
+    """4.4. Feature scaling/normalization.
+
+    Before making any transformation to our data, we want to make sure that the fact that different regions of the
+    brain have different ranges will not affect our model. For example, the hippocampus will tend to be larger than
+    the thalamus. If we keep the original values, the algorithm may mistakenly conclude that the hippocampus will be
+    less important than region the thalamus. - IS THIS CORRECT?
+    There are several possible solutions to avoid this and other related issues. In this example, we will transform
+    the data in such a way that the distribution of each feature will resemble a normal distribution (e.g. mean=0 and
+    standard-deviation=1). Each new normalised value z is calculated by taking each data point xi, subtracting the
+    mean x_ and then dividing it by the standard-deviation sd of the same feature:
+
+    zxi = (x_featureA - xi) / sdfeatureA
+
+    The code below normalises each feature independently using the function StandardScaler from sklearn.
+    First, we fit the function StandardScaler to the train set and store the parameters - x_ and sd - in the variable
+    scaler. Then, we transform both the train and test set using the formula above with the stored parameters.
+    """
     scaler = StandardScaler().fit(X_train)
     X_train_n = scaler.transform(X_train)
     X_test_n = scaler.transform(X_test)
+    return X_train_n, X_test_n
 
-    # ==================================================================================================================
-    # Let's check what effect this had on the data. Let's select three features at random from the training set -
-    # columns 2, 65, and 100 - and plot each distribution before and after normalisation
-    # ==================================================================================================================
+
+# ==================================================================================================================
+# The first plot shows three very distinct distributions. On the other hand, the second plot shows almost
+# overlapping distributions!
+# FIX: !!TOO MANY LINES...NOT VERY INTUITIVE!! Is it useful at all?? Maybe a bit anoying having this at every fold??
+# ====================================================================================================================
+def check_normalization(X_train, X_train_n):
+    """Check data normalization.
+
+    Let's check what effect this had on the data. Let's select three features at random from the training set -
+    columns 2, 65, and 100 - and plot each distribution before and after normalisation
+    """
     feature_2_before, feature_65_before, feature_100_before = X_train[:, 2], X_train[:, 65], X_train[:, 100]
     feature_2_after, feature_65_after, feature_100_after = X_train_n[:, 2], X_train_n[:, 65], X_train_n[:, 100]
 
@@ -320,96 +317,102 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     p1_before.set_title('Distribution before normalization')
     plt.show()
 
-    p1_after = sns.kdeplot(feature_2_after, color="r", label=("Feature 2 after normalization"))
-    p1_after = sns.kdeplot(feature_65_after, color="b", label=("Feature 65 after normalization"))
-    p1_after = sns.kdeplot(feature_100_after, color="g", label=("Feature 100 after normalization"))
+    sns.kdeplot(feature_2_after, color="r", label=("Feature 2 after normalization"))
+    sns.kdeplot(feature_65_after, color="b", label=("Feature 65 after normalization"))
+    sns.kdeplot(feature_100_after, color="g", label=("Feature 100 after normalization"))
     p1_before.set_title('Distribution after normalization')
     plt.show()
-    print("")
 
-    # ==================================================================================================================
-    # The first plot shows three very distinct distributions. On the other hand, the second plot shows almost
-    # overlapping distributions!
-    # FIX: !!TOO MANY LINES...NOT VERY INTUITIVE!! Is it useful at all?? Maybe a bit anoying having this at every fold??
-    # ====================================================================================================================
 
-    # 4.5. Feature selection
-    # Our initial feature set contains 169 features. It is reasonable to assume that some features (i.e. grey matter
-    # volume of some brain regions) may be more useful than others for distinguishing SZ patients from controls.
-    # Removing less relevant features will speed up the training process and may even improve prediction.
-    #
-    # This can be done by adding a step known as feature selection to our model. You may recall from Chapter 2 that
-    # there are several different ways in which we can implement this step. In this example, we will use the popular
-    # recursive feature elimination (RFE) method. In principle, this is how RFE works:
-    #  1. The model is fit to the training data
-    #  2. The coefficient of each feature (or feature importance) is retrieved
-    #  3. Features are ranked according to their coefficients
-    #  4. The feature (or features, depending on the hyperparamenters chosen) with least importance is dropped
-    #  5. The model is fit to the remaining features
-    #  6. Steps 2-5 are repeated until the desired number of features has been reached
-    # From the description above, it follows that the implementation of RFE relies on two hyperparameters: a) step - the
-    # number of features to remove in step 4, b) n_features_to_select - the final number of desired features. For
-    # simplicity,we will keep these hyperparameters with their default values: step = 1 and
-    # n_features_to_select = half of the features = 85.
-    # Recall that feature selection should be done within the CV. Thefore, RFE will be be implementated in the model
-    # training section.
-    # FIX: add RFE
+def feature_selection():
+    """4.5. Feature selection.
 
-    # 5. MODEL TRAINING
-    # 5.1. Balanced accuracy
-    # As part of the model training process, we need to specify a performance metric. Our data is not that unbalanced,
-    # however, we will still use balanced accuracy since this is more likely to be use (note that for perfectly balanced
-    # dataset, accuracy and balanced accuracy should be the same). Unfortunately, the long list of performance metrics
-    # available form sklearn does not yet include balanced accuracy. Fortunately however, it does allow us to build a
-    # custom metric. This means we can create a function grid_scorer that calculates balanced accuracy which we can
-    # then pass through our model.
-    # ==================================================================================================================
-    from sklearn.metrics import make_scorer
-    from sklearn.metrics import confusion_matrix
+    Our initial feature set contains 169 features. It is reasonable to assume that some features (i.e. grey matter
+    volume of some brain regions) may be more useful than others for distinguishing SZ patients from controls.
+    Removing less relevant features will speed up the training process and may even improve prediction.
 
-    def balanced_accuracy_score(actual, prediction):
-        cm = confusion_matrix(actual, prediction)
-        bac = np.sum(np.true_divide(np.diagonal(cm), np.sum(cm, axis=1))) / cm.shape[1]
-        return bac
-    grid_scorer = make_scorer(balanced_accuracy_score, greater_is_better=True)
+    This can be done by adding a step known as feature selection to our model. You may recall from Chapter 2 that
+    there are several different ways in which we can implement this step. In this example, we will use the popular
+    recursive feature elimination (RFE) method. In principle, this is how RFE works:
+     1. The model is fit to the training data
+     2. The coefficient of each feature (or feature importance) is retrieved
+     3. Features are ranked according to their coefficients
+     4. The feature (or features, depending on the hyperparamenters chosen) with least importance is dropped
+     5. The model is fit to the remaining features
+     6. Steps 2-5 are repeated until the desired number of features has been reached
+    From the description above, it follows that the implementation of RFE relies on two hyperparameters: a) step - the
+    number of features to remove in step 4, b) n_features_to_select - the final number of desired features. For
+    simplicity,we will keep these hyperparameters with their default values: step = 1 and
+    n_features_to_select = half of the features = 85.
+    Recall that feature selection should be done within the CV. Thefore, RFE will be be implementated in the model
+    training section.
+    FIX: add RFE
+    """
+    pass
 
-    # ==================================================================================================================
-    # 5.2. Machine learning algorithm and hyper-parameter optimisation
-    # Now that we have the performance metric defined, we can specify our machine learning algorithm. In this example,
-    # we will use the popular support vector machine (SVM) as implemented by the sklearn library. You may remember from
-    # Chapter 6 that SVM allows the use of different kernels to best separate classes. Here, we will use the default
-    # linear kernel for simplicity. You can find more information about different kernels at https://scikit-learn.org/
-    # stable/modules/svm.html.
-    # ==================================================================================================================
-    from sklearn.svm import LinearSVC
-    clf = LinearSVC()
 
-    # ==================================================================================================================
-    # Importantly, SVM relies on a hyperparameter C that regulates how much we want to avoid misclassifying each
-    # training example (see Chapter 6). The ideal method for choosing the value of C is by letting the model try
-    # several values and selecting the one with the best performance. This should be done via an additional CV inside
-    # the already defined CV, thus creating a nested CV where different values of C are fitted to the training set and
-    # tested in the validation set; the value of C with best performance is then used to fit the model to the training
-    # set as defined by the outer CV (see Chapter 2 for more details).
-    # Fortunately, sklearn has a set of useful tools to implement this. Here, we will use GridSearch, a popular choice
-    # in the brain disorders literature. You can find more about GridSearch and other methods for hyperparameter
-    # optimisation at https://scikit-learn.org/stable/modules/grid_search.html.
-    # To implement GridSearch, we first need to provide a range of possible values for C; this is our search parameter
-    # space. Next, we specify the parameters for the GridSearch. We will use stratified kfold again with 10 iterations,
-    # as with the outer CV previously defined. The final model design can be seen in Figure 1.
-    # ==================================================================================================================
-    from sklearn.model_selection import GridSearchCV
+def model_training(balanced_accuracy_score):
+    """5. MODEL TRAINING.
+
+    5.1. Balanced accuracy
+    As part of the model training process, we need to specify a performance metric. Our data is not that unbalanced,
+    however, we will still use balanced accuracy since this is more likely to be use (note that for perfectly balanced
+    dataset, accuracy and balanced accuracy should be the same). Unfortunately, the long list of performance metrics
+    available form sklearn does not yet include balanced accuracy. Fortunately however, it does allow us to build a
+    custom metric. This means we can create a function grid_scorer that calculates balanced accuracy which we can
+    then pass through our model.
+    """
+    return make_scorer(balanced_accuracy_score, greater_is_better=True)
+
+
+def hyperparameter_search(clf):
+    """5.2. Machine learning algorithm and hyper-parameter optimisation.
+
+    Now that we have the performance metric defined, we can specify our machine learning algorithm. In this example,
+    we will use the popular support vector machine (SVM) as implemented by the sklearn library. You may remember from
+    Chapter 6 that SVM allows the use of different kernels to best separate classes. Here, we will use the default
+    linear kernel for simplicity. You can find more information about different kernels at https://scikit-learn.org/
+    stable/modules/svm.html.
+
+    Importantly, SVM relies on a hyperparameter C that regulates how much we want to avoid misclassifying each
+    training example (see Chapter 6). The ideal method for choosing the value of C is by letting the model try
+    several values and selecting the one with the best performance. This should be done via an additional CV inside
+    the already defined CV, thus creating a nested CV where different values of C are fitted to the training set and
+    tested in the validation set; the value of C with best performance is then used to fit the model to the training
+    set as defined by the outer CV (see Chapter 2 for more details).
+    Fortunately, sklearn has a set of useful tools to implement this. Here, we will use GridSearch, a popular choice
+    in the brain disorders literature. You can find more about GridSearch and other methods for hyperparameter
+    optimisation at https://scikit-learn.org/stable/modules/grid_search.html.
+    To implement GridSearch, we first need to provide a range of possible values for C; this is our search parameter
+    space. Next, we specify the parameters for the GridSearch. We will use stratified kfold again with 10 iterations,
+    as with the outer CV previously defined. The final model design can be seen in Figure 1.
+    """
     param_grid = [
         {'C': [2e-6, 2e-5, 2e-4, 2e-3, 2e-2, 2e-1, 2e0, 2e1, 2e2, 2e3]},
     ]
     internal_cv = StratifiedKFold(n_splits=10)
-    grid_clf = GridSearchCV(estimator=clf, param_grid=param_grid, cv=internal_cv, scoring=grid_scorer, verbose=1)
+    return GridSearchCV(estimator=clf, param_grid=param_grid, cv=internal_cv, scoring=grid_scorer, verbose=1)
 
+
+# Since we are working with pandas, I would keep it in DataFrames instead of creating numpy arrays.
+cv_test = pd.DataFrame([], columns=['Balanced_acc', 'Sensitivity', 'Specificity', 'Error_Rate'])
+coefficients = []
+for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+    check_number_of_participants(i_fold, y_train, y_test)
+    data_imputation(X_train, X_test)
+    X_train_n, X_test_n = data_normalization(X_train, X_test)
+    check_normalization(X_train, X_train_n)
+    grid_scorer = model_training(balanced_accuracy_score)
+    # comment: Small comments could be inside of the loop.
+    # Define the model
+    clf = LinearSVC()
+    grid_clf = hyperparameter_search(clf)
     # We are now ready to fit our SVM model to the training data. We do this by applying the fit command to the
     # features and labels from the training set.
     # FIX: this runs but it is giving me a "Convergence Warning" and I don't know why..
     grid_result = grid_clf.fit(X_train_n, y_train)
-
     # The code below shows how GridSearch works: we can see the performance for the different values of C in the
     # validation set within the inner CV.
     print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
@@ -419,14 +422,12 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
 
     for mean, stdev, param in zip(means, stds, params):
         print("%f (%f) with: %r" % (mean, stdev, param))
-
     # The value of C that yields the best performance in the validation set is shown at the top. We then define a
     # second clasifier clf2, where C takes the best perfomring value and fit it to the training data as defined by the
     # outer CV. Finally, we use this model to make predictions in the test set; these are stored in y_predicted.
     clf2 = LinearSVC(C=grid_result.best_params_["C"])
     clf2.fit(X_train_n, y_train)
     y_predicted = clf2.predict(X_test_n)
-
     # Once we have the predicted labels, we can now estimate the performance in the test set. First, we compute the
     # confusion matrix. From here, we estimate balanced accuracy, sensitivity, specificity and error rate. There are
     # plenty more metrics to choose from in sklearn. For a comprehensive list see https://scikit-learn.org/stable/
@@ -446,11 +447,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     print("Specificity: %.4f " % (test_spec))
     print("Error Rate: %.4f " % (error_rate))
 
-    cv_test_bac[i_fold - 1] = test_bac
-    cv_test_sens[i_fold - 1] = test_sens
-    cv_test_spec[i_fold - 1] = test_spec
-    cv_error_rate[i_fold - 1] = error_rate
-
+    cv_test.loc[i_fold] = [test_bac, test_sens, test_spec, error_rate]
     # 5.3. Save model's coefficients
     # In addition to model performance, we are also interested in knowing which features are driving the model's
     # predictions. Sklearn has an in-built tool coef_ that we can apply to our SVM model to extract this information.
@@ -462,8 +459,6 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     # 5.4. Save the model's predictions
     # Let's save the true labels, the predicted labels and the trained model for each CV iteration. This informtion may
     # come in handy later on for some additional analyses.
-    import csv
-    import pickle
 
     if i_fold == 0:
         file_predictions = open("./results/" + experiment_name + "/error_analysis.csv", 'w')
@@ -477,7 +472,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     wr.writerow(['-', '-', '-'])
     file_predictions.close()
 
-    f = open("./results/"+experiment_name+"/clf_"+str(i_fold)+".pkl", 'wb')
+    f = open("./results/%s/clf_%s.pkl" % (experiment_name, str(i_fold)), 'wb')
     pickle.dump(clf, f)
     f.close()
 
@@ -485,16 +480,19 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
 # 6. ASSESSING PERFORMANCE
 # Once the 10 iterations of the CV are finished, we calculate the average of each chosen metric across all iterations.
 # The result will be the final overall performance of our model.
-print("")
-print("Cross-validation Balanced acc: %.4f +- %.4f" % (cv_test_bac.mean(), cv_test_bac.std()))
-print("Cross-validation Sensitivity: %.4f +- %.4f" % (cv_test_sens.mean(), cv_test_sens.std()))
-print("Cross-validation Specificity: %.4f +- %.4f" % (cv_test_spec.mean(), cv_test_spec.std()))
-print("Cross-validation Error Rate: %.4f +- %.4f" % (cv_error_rate.mean(), cv_error_rate.std()))
-print("")
+# print("")
+# print("Cross-validation Balanced acc: %.4f +- %.4f" % (cv_test_bac.mean(), cv_test_bac.std()))
+# print("Cross-validation Sensitivity: %.4f +- %.4f" % (cv_test_sens.mean(), cv_test_sens.std()))
+# print("Cross-validation Specificity: %.4f +- %.4f" % (cv_test_spec.mean(), cv_test_spec.std()))
+# print("Cross-validation Error Rate: %.4f +- %.4f" % (cv_error_rate.mean(), cv_error_rate.std()))
+# print("")
+# comment: I would use describe instead.
+cv_test.describe().loc[['std', 'mean']]
+cv_test.describe()
 
 # Make sure to save your main results.
 f = open("./results/" + experiment_name + "/final_BAC.pkl", 'wb')
-pickle.dump(cv_test_bac, f)
+pickle.dump(cv_test.Balanced_acc, f)
 f.close()
 
 
