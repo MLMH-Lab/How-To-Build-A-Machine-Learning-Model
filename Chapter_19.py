@@ -1,14 +1,17 @@
+"""Rafael review. Comments are started with 'comment:'."""
 #!/usr/bin/env python
 # coding: utf-8
-
+# Ignore WARNING
+import warnings
+warnings.filterwarnings('ignore')
 # ======================================================================================================================
 # 1. ORGANISE YOUR WORKSPACE
 # Create a folder in which you can store all your experiments. After a lot of testing it will be easy to feel lost.
 # Give your experiment a name and create a folder in a chosen directory with the same name.
 # ======================================================================================================================
-import os
+from pathlib import Path
 experiment_name = "example"
-if not os.path.exists("./results/" + experiment_name + "/"):
+Path("./results/%s/" % experiment_name).mkdir(exist_ok=True, parents=True)
     os.makedirs("./results/" + experiment_name + "/")
 
 
@@ -16,26 +19,29 @@ if not os.path.exists("./results/" + experiment_name + "/"):
 # 2. DEFINE YOUR PROBLEM
 # The first step in your machine learning pipeline is to define your problem. To do this you will need to first load
 # your data and then define feature set X and the corresponding labels y.
-# ======================================================================================================================
+#
 
 # ======================================================================================================================
 # 2.1. Loading the data
 # In this example, we will use tabular data with features as columns and rows as participants. The data are saved as
 # a csv file. We will use the library pandas to load and explore the data. The first thing we need to do is import the
 # pandas library. To make the code simpler, it is common to import it as pd. This way, we simply type "pd" everytime we
-# want to call the pandas library. From pandas, we use the function read_csv() to load the csv file containing our data.
+# want to call the pandas library. One could be tempted to just use "from pandas import *", and directly call the
+# function in pandas by their names. This is a very bad idea and can cause troubles in many different ways.
+# From pandas, we use the function read_csv() to load the csv file containing our data.
 # This will transform the data into an object called dataframe.
 # Fix: add link to dummy data??
 # ======================================================================================================================
 import pandas as pd
-data = pd.read_csv("./Chapter_19_data.csv")
+data = pd.read_csv("./Chapter_19_data.csv", index_col='ID')  # Use ID as index
 
 # ======================================================================================================================
 # Let's start by seeing the first six rows of the data. Selecting subsections ("slicing") of a dataframe using pandas is
 # straightforward. There are different ways to do this. Here, we use loc to select the first five rows (note that the
 # first column is index 0 and the last column is not included).
+# data.head(n=6) would give the sample result.
 # ======================================================================================================================
-data.loc[0:5]
+data[0:6]  # The other way would work only with numeric indexes.
 
 # ======================================================================================================================
 # We can see the features names at the top and the data for the first six participants. Features include the ID, age and
@@ -77,17 +83,17 @@ X = data.iloc[:, 4:]
 #  - Data imbalance with respect to the labels
 #  - Confounding variables
 #  - Missing data
-# ======================================================================================================================
+#
 
 # ======================================================================================================================
 # 3.1. Class imbalance
 # First, let's check the number of total participants, features and number of participants in each class.
 # ======================================================================================================================
 print("")
-print("Total N:", len(y))
-print("N features:", len(X.columns))
-print("N SZ:", len(y[y == 0]))
-print("N HC:", len(y[y == 1]))
+print("Total\n  N:", len(y))
+print("  N features:", len(X.columns))
+print("  N SZ:", len(y[y == 0]))
+print("  N HC:", len(y[y == 1]))
 
 # ======================================================================================================================
 # From the output we can see that there are 955 participants in total, 444 patients and 511 controls. There does not
@@ -95,7 +101,7 @@ print("N HC:", len(y[y == 1]))
 # downsample the HC to match the SZ group. However, this would mean loosing some data. Since the imbalance is not too
 # large, we will use balanced accuracy as our metric of choice as well as stratified CV to ensure the same proportion
 # AD/HC across the CV iterations.
-# ======================================================================================================================
+#
 
 # ======================================================================================================================
 # 3.2. Confounding variables
@@ -105,11 +111,12 @@ print("N HC:", len(y[y == 1]))
 # ======================================================================================================================
 import seaborn as sns
 import matplotlib.pyplot as plt
-gender = data["Gender"]
+gender = data["Gender"].map({0: 'Male', 1: 'Female'})
 print("")
-ax = sns.countplot(x=y, hue=gender, palette="Blues_d")
+ax = sns.countplot(x=y, hue=gender, palette=['#4cad2f', '#526df7'])
 plt.show()
-# ======================================================================================================================
+# comment: a list of pallets is given in the in seaborns website. I find more useful to teach that arbitrary colors can
+# be used.
 # FIX: legend replace numbers with "Male" and "Female"
 # ======================================================================================================================
 
@@ -124,7 +131,8 @@ sd = (data.groupby("label")["Age"].std()).round(1)
 print("")
 print("Mean age for HC:", mean[0], "±", sd[0])
 print("Mean age for SZ:", mean[1], "±", sd[1])
-
+data.groupby("label").describe()["Age"]  # consider using the discribe function since it gives more complete informtion.
+data.hist('Age', by='label', sharex=True, sharey=True, bins=20, figsize=(15, 5))  # consider plotting the histogram
 # ======================================================================================================================
 # As shown in the output above, the mean and standard-deviations for age are indeed very similar between the SZ and HC
 # groups. For this reason, we will not consider age as a significant confounder in this example.
@@ -133,7 +141,7 @@ print("Mean age for SZ:", mean[1], "±", sd[1])
 # variables. Another popular option would be to regress out the confounding variables from each feature and using the
 # residuals as the new features. For more information on confounding variables in neuroimaging and machine learning
 # learning see Rao et al., 2017.
-# ======================================================================================================================
+#
 
 
 # ======================================================================================================================
@@ -143,6 +151,8 @@ print("Mean age for SZ:", mean[1], "±", sd[1])
 # loop through each the column in the dataframe data (note data we are also including gender and age) and get the
 # feature name and Id for the corresponding missing values.
 # ======================================================================================================================
+
+
 def detect_nan(dataset):
     nan_total = dataset.isnull().sum().sum()
     if nan_total > 0:
@@ -153,14 +163,14 @@ def detect_nan(dataset):
             dataset["nan"] = nan
             ids = []
             for i in dataset["nan"]:
-                if i == True:
-                    id_nan = dataset.loc[dataset["nan"] == True, 'ID']
+                if i:  # comment: You don't need "== True"
+                    id_nan = dataset.loc[dataset["nan"], 'ID']
                     ids.append(id_nan)
             # Calculate total number of nan for each feature and Id
             nan_sum = nan.sum()
             if nan_sum > 0:
                 print("Found", nan_sum, "missing value(s) for", column, "for Id(s):", *ids[0])
-        #dataset = dataset.drop(columns=["nan"])
+        # dataset = dataset.drop(columns=["nan"])
     else:
         print("There are no missing data in this dataset!")
         print("")
@@ -171,11 +181,11 @@ detect_nan(data)
 # ======================================================================================================================
 # From the output we can see that there are 12 missing values for the feature Left Lateral Ventricle. There are several
 # options to go from here with different degrees of complexity (see Chapter x for a more in-depth description). In this
-# example, we will impute the data #missing for Left Lateral Ventricle. Recall that missing data should be imputed
+# example, we will impute the data missing for Left Lateral Ventricle. Recall that missing data should be imputed
 # inside the cross validation (CV). Therefore, this step will be implemented this later.
 # FIX: At the moment thre is no missing data. I will remove some data to make it more interesting. This code works well
 # but I think it is probably overly complicated...if you could find a cool way to simplify it, it would be great!
-# ======================================================================================================================
+#
 
 
 # ======================================================================================================================
@@ -183,27 +193,28 @@ detect_nan(data)
 # In this step, we want to make all the necessary transformations to our data that can help us build a good model. As
 # described in Chapter 2, this can involve different procedures depending on the nature of the data. In this example, we
 # want to use neuroanatomical data to classify SZ and HC.
-# ======================================================================================================================
+#
 
 # ======================================================================================================================
 # 4.1. Feature extraction
 # This first step involves extracting brain morphometric information from the raw MRI images. Luckily, this step has
 # already been done for us. The regional grey matter volumes that make up our data X have been extracted with FreeSurfer
 # (REF).
-# ======================================================================================================================
+#
 
 # ======================================================================================================================
 # 4.2. Cross-validation
 # Before we move on to apply any transformations to our feature set X, we need to split the data into train and test
 # sets. Recall that this is a critical step to ensure independence between the training and test sets. There are
-# different ways in which to do this. In #this example, we will use stratified 10-fold cross-validation (CV). See
+# different ways in which to do this. In this example, we will use stratified 10-fold cross-validation (CV). See
 # Chapter 2 for an overview and rational of the most commonly used types of CV.
-# We first transform the dataframe X into a 2D array of the same shape using the library numpy. For the purpose of this
-# exercise, you can think of this as a 2x2 matrix. This will make it easier later on, as some of the functions will
-# require the data to be in this format.
+# We first transform the dataframe X into a 2D array of 32 bits float. For the purpose of this exercise, you can think
+# of this as a 2x2 matrix. This will make it easier later on, as some of the functions will require the data to be in
+# this format.
+# comment: I don't think it is really necessary, but ok. However, I would simplify it a litte bit.
 # ======================================================================================================================
-import numpy as np
-X = np.asarray(X.values, dtype='float32')
+X = X.values.astype('float32')
+y = y.values.astype('float32')
 y = np.asarray(y.values, dtype='float32')
 
 # ======================================================================================================================
@@ -211,7 +222,7 @@ y = np.asarray(y.values, dtype='float32')
 # library, and assign it to the variable skf.
 # Notice the hyperparamter random_state in the specification of the CV assigned to the variable skf. This hyperparamter
 # allows us to control the element of randomness intrinsic to splitting the total data into train and test sets. In this
-# example, our data comprises of #300 participants in total. In the code above, we have instructed the model to split it
+# example, our data comprises of 300 participants in total. In the code above, we have instructed the model to split it
 # into 10 groups (whilst maintaining the AD/HC ratio similar throughout the CV iterations). Now, there are multiple
 # solutions to this task! Not setting this hyperparameter to a #specific value means that, every time you run your code,
 # the participants assigned to each group will differ! Consequently, your results will, very likely, differ as well*.
