@@ -219,6 +219,7 @@ skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=1)
 # iterations. Once the CV is finished, we can then calculate the average weight of each feature for the task.
 # ======================================================================================================================
 # We do not import or define functions inside loop, it add big overload to the code.
+# It also make the code hard to read and understand.
 import numpy as np
 from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import StandardScaler
@@ -396,7 +397,8 @@ def hyperparameter_search(clf):
 
 # Since we are working with pandas, I would keep it in DataFrames instead of creating numpy arrays.
 cv_test = pd.DataFrame([], columns=['Balanced_acc', 'Sensitivity', 'Specificity', 'Error_Rate'])
-coefficients = []
+feature_names = data.iloc[:, 4:].columns
+coefficients = pd.DataFrame([], columns=feature_names)
 for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
@@ -453,8 +455,8 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     # predictions. Sklearn has an in-built tool coef_ that we can apply to our SVM model to extract this information.
     # We will store the coefficients for each feature for a particular CV iteration in coefficients_fold. Next, we
     # append these values to the empty list coefficients we have already created.
-    coefficients_fold = clf2.coef_
-    coefficients.append(coefficients_fold)
+    coefficients_fold = clf2.coef_.squeeze()
+    coefficients.loc[i_fold] = coefficients_fold
 
     # 5.4. Save the model's predictions
     # Let's save the true labels, the predicted labels and the trained model for each CV iteration. This informtion may
@@ -476,10 +478,11 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
     pickle.dump(clf, f)
     f.close()
 
-
+# ======================================================================================================================
 # 6. ASSESSING PERFORMANCE
 # Once the 10 iterations of the CV are finished, we calculate the average of each chosen metric across all iterations.
 # The result will be the final overall performance of our model.
+# ======================================================================================================================
 # print("")
 # print("Cross-validation Balanced acc: %.4f +- %.4f" % (cv_test_bac.mean(), cv_test_bac.std()))
 # print("Cross-validation Sensitivity: %.4f +- %.4f" % (cv_test_sens.mean(), cv_test_sens.std()))
@@ -487,8 +490,8 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
 # print("Cross-validation Error Rate: %.4f +- %.4f" % (cv_error_rate.mean(), cv_error_rate.std()))
 # print("")
 # comment: I would use describe instead.
-cv_test.describe().loc[['std', 'mean']]
-cv_test.describe()
+cv_test.describe().loc[['mean', 'std']]  # if you want to show only mean and std
+cv_test.describe()  # But I would recommend to show everithing
 
 # Make sure to save your main results.
 f = open("./results/" + experiment_name + "/final_BAC.pkl", 'wb')
@@ -496,6 +499,7 @@ pickle.dump(cv_test.Balanced_acc, f)
 f.close()
 
 
+# ======================================================================================================================
 # 7. POST-HOC ANALYSIS
 # Once we have our final model, we can several additional analysis. Here, we will run the following analyses:
 # - Test balanced accuracy for statistical significance via permutation testing
@@ -503,18 +507,13 @@ f.close()
 
 # 7.1. Best features
 # EXPLAIN CODE HERE IF THIS IS THE FINAL CODE
+# ======================================================================================================================
+
 
 def plot_coefs(coeffs):  # this code works but it is not very elegant??
-    coeffs = np.mean((np.asarray(coeffs)), axis=0)
-
-    feature_names = data.iloc[:, 4:].columns  # get feature names from original data
-    coeffs = pd.DataFrame(data=coeffs, columns=feature_names)
-    coeffs = coeffs.transpose()
-
     # get top positive and negative weights
-    largest_coefs = coeffs.nlargest(n=15, columns=0)
-    smallest_coefs = coeffs.nsmallest(n=15, columns=0)
-
+    largest_coefs = coeffs.T.nlargest(n=15, columns=0)
+    smallest_coefs = coeffs.T.nsmallest(n=15, columns=0)
     coeffs = pd.concat([largest_coefs, smallest_coefs], axis=0, sort=True)  # concat for plotting
     coeffs.plot(kind='barh', figsize=(8, 10), legend=False)  # plot weights
 
@@ -522,18 +521,20 @@ def plot_coefs(coeffs):  # this code works but it is not very elegant??
 plot_coefs(coefficients)
 
 
-# The bar plot above shows the most important features to classify a participant as a patient (positive weighted features) and as a control (negative weighted features). For example, a large third ventricle was more associated with patients. - CHECK IF THIS INTERPRETATION IS CORRECT
+# The bar plot above shows the most important features to classify a participant as a patient (positive weighted
+# features) and as a control (negative weighted features). For example, a large third ventricle was more associated
+# with patients. - CHECK IF THIS INTERPRETATION IS CORRECT
 # 7.2. Permutation testing FIX:should this be a seperate file??
 # EXPLAIN CODE HERE IF THIS IS THE FINAL CODE
 
 models = []
 for i in range(n_folds):
     print("Loading models ", i)
-    f = open("./results/"+experiment_name+"/clf_"+str(i)+".pkl", 'rb')
+    f = open("./results/%s/clf_%d.pkl" % (experiment_name, i), 'rb')
     models.append(pickle.load(f))
     f.close()
 
-f = open("./results/"+experiment_name+"/final_BAC.pkl", 'rb')
+f = open("./results/%s/final_BAC.pkl" % experiment_name, 'rb')
 best_BAC = pickle.load(f)
 f.close()
 
@@ -554,7 +555,6 @@ for p in range(n_permutation):
     cv_test_bac = np.zeros((n_folds,))
 
     for i, (train_index, test_index) in enumerate(skf.split(X, y)):
-        # ==============================================================================================================
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = permuted_labels[train_index], permuted_labels[test_index]
 
@@ -579,10 +579,10 @@ for p in range(n_permutation):
 
 print("")
 print("BEST BAC", best_BAC.mean())
-pvalue = (np.sum((permutation_test_bac > best_BAC.mean()).astype('int'))+1.)/(n_permutation+1.)
+pvalue = (np.sum((permutation_test_bac > best_BAC.mean()).astype('int')) + 1.) / (n_permutation + 1.)
 print("P-VALUE", pvalue)
 
 # Save p-value to the designated folder
-f = open("./results/"+experiment_name+"/p-value.pkl", 'wb')
+f = open("./results/%s/p-value.pkl" % experiment_name, 'wb')
 pickle.dump(pvalue, f)
 f.close()
