@@ -107,7 +107,7 @@ def detect_nan(dataset):
 # SNIPPET 11
 
 dataset_df = dataset_df.dropna()
-print("Number of participants =", dataset_df.shape[0])
+print('Number of participants = %d' % dataset_df.shape[0])
 
 # Out
 # Number of participants = 697
@@ -192,18 +192,22 @@ _, p_value_age_sz_normality = stats.shapiro(dataset_df[dataset_df['Diagnosis'] =
 print('Healthy control - Shapiro-Wilk Normality test: p-value = %.4f' % p_value_age_hc_normality)
 print('Patients - Shapiro-Wilk Normality test: p-value = %.4f' % p_value_age_sz_normality)
 
-# Out
-# Healthy control - Shapiro-Wilk Normality test: p-value = 0.9620
-# Patients - Shapiro-Wilk Normality test: p-value = 0.7732
-# --------------------------------------------------------------------------
-# SNIPPET 17
-
 # Descriptives
 mean_hc, sd_hc = (dataset_df[dataset_df['Diagnosis'] == healthy_str]['Age']).describe().loc[['mean', 'std']]
 mean_sz, sd_sz = (dataset_df[dataset_df['Diagnosis'] == patient_str]['Age']).describe().loc[['mean', 'std']]
 
 print('HC: Mean(SD) = %.2f(%.2f)' % (mean_hc, sd_hc))
 print('SZ: Mean(SD) = %.2f(%.2f)' % (mean_sz, sd_sz))
+
+
+# Out
+# Healthy control - Shapiro-Wilk Normality test: p-value = 0.9620
+# Patients - Shapiro-Wilk Normality test: p-value = 0.7732
+# HC: Mean(SD) = 25.30(2.83)
+# SZ: Mean(SD) = 24.96(3.11)
+# --------------------------------------------------------------------------
+# SNIPPET 17
+
 
 age_sz = dataset_df[dataset_df['Diagnosis'] == healthy_str]['Age']
 age_hc = dataset_df[dataset_df['Diagnosis'] == patient_str]['Age']
@@ -212,8 +216,6 @@ statistic, p_value = stats.ttest_ind(age_sz, age_hc)
 print("Age - Student's t test: t statistic = %.4f, p-value = %.4f" % (statistic, p_value))
 
 # Out
-# HC: Mean(SD) = 25.30(2.83)
-# SZ: Mean(SD) = 24.96(3.11)
 # Age - Student's t test: t statistic = 1.4896, p-value = 0.1368
 # --------------------------------------------------------------------------
 # SNIPPET 18
@@ -238,17 +240,14 @@ targets = targets_df.values.astype('int')
 # --------------------------------------------------------------------------
 # SNIPPET 21
 
-predictions_df = pd.DataFrame(targets_df)
-predictions_df['predictions'] = np.nan
-
-# --------------------------------------------------------------------------
-# SNIPPET 22
-
 n_folds = 10
 skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_seed)
 
 # --------------------------------------------------------------------------
-# SNIPPET 23
+# SNIPPET 22
+
+predictions_df = pd.DataFrame(targets_df)
+predictions_df['predictions'] = np.nan
 
 cv_test_bac = np.zeros((n_folds, 1))
 cv_test_sens = np.zeros((n_folds, 1))
@@ -258,12 +257,12 @@ cv_coefficients = np.zeros((n_folds, len(features_names)))
 models_dir = experiment_dir / 'models'
 models_dir.mkdir(exist_ok=True)
 
+# --------------------------------------------------------------------------
+# SNIPPET 23
+
 for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets)):
     features_train, features_test = features[train_index], features[test_index]
     targets_train, targets_test = targets[train_index], targets[test_index]
-
-# --------------------------------------------------------------------------
-# SNIPPET 24
 
     print("CV iteration: %d" % (i_fold + 1))
     print("Training set size: %d" % len(targets_train))
@@ -274,7 +273,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
 # Training set size: 625
 # Test set size: 70
 # --------------------------------------------------------------------------
-# SNIPPET 25
+# SNIPPET 24
 
     scaler = StandardScaler()
 
@@ -284,12 +283,12 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
     features_test_normalized = scaler.transform(features_test)
 
 # --------------------------------------------------------------------------
-# SNIPPET 26
+# SNIPPET 25
 
     clf = LinearSVC(loss='hinge')
 
 # --------------------------------------------------------------------------
-# SNIPPET 27
+# SNIPPET 26
 
     # Hyperparameter seach space
     param_grid = {'C': [2 ** -6, 2 ** -5, 2 ** -4, 2 ** -3, 2 ** -2, 2 ** -1, 2 ** 0, 2 ** 1]}
@@ -303,7 +302,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
                            verbose=2)
 
 # --------------------------------------------------------------------------
-# SNIPPET 28
+# SNIPPET 27
 
     grid_result = grid_cv.fit(features_train_normalized, targets_train)
 # Out
@@ -345,7 +344,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
 # [CV] .............................................. C=2, total=   0.3s
 # [Parallel(n_jobs=1)]: Done  80 out of  80 | elapsed:   16.6s finished
 # --------------------------------------------------------------------------
-# SNIPPET 29
+# SNIPPET 28
 
     print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
     means = grid_result.cv_results_['mean_test_score']
@@ -366,7 +365,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
 # 0.659122 (0.061582) with: {'C': 1}
 # 0.666941 (0.075792) with: {'C': 2}
 # --------------------------------------------------------------------------
-# SNIPPET 30
+# SNIPPET 29
 
     best_clf = grid_cv.best_estimator_
 
@@ -374,19 +373,19 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
     joblib.dump(scaler, models_dir / ('scaler_%d.joblib' % i_fold))
 
 # --------------------------------------------------------------------------
-# SNIPPET 31
+# SNIPPET 30
     coef_abs_value = np.abs(best_clf.coef_)
     cv_coefficients[i_fold, :] = coef_abs_value
 
 # --------------------------------------------------------------------------
-# SNIPPET 2
+# SNIPPET 31
     target_test_predicted = best_clf.predict(features_test_normalized)
 
     for row, value in zip(test_index, target_test_predicted):
         predictions_df.iloc[row, predictions_df.columns.get_loc('predictions')] = value
 
 # --------------------------------------------------------------------------
-# SNIPPET 33
+# SNIPPET 32
 
     print("Confusion matrix")
     cm = confusion_matrix(targets_test, target_test_predicted)
@@ -416,7 +415,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
 # Sensitivity: 0.6970
 # Specificity: 0.8108
 # --------------------------------------------------------------------------
-# SNIPPET 34
+# SNIPPET 33
 
 print("Cross-validation Balanced accuracy: %.4f +- %.4f" % (cv_test_bac.mean(), cv_test_bac.std()))
 print("Cross-validation Sensitivity: %.4f +- %.4f" % (cv_test_sens.mean(), cv_test_sens.std()))
@@ -427,7 +426,7 @@ print("Cross-validation Specificity: %.4f +- %.4f" % (cv_test_spec.mean(), cv_te
 # Cross-validation Sensitivity: 0.7182 +- 0.0755
 # Cross-validation Specificity: 0.7756 +- 0.0612
 # --------------------------------------------------------------------------
-# SNIPPET 35
+# SNIPPET 34
 
 # Saving feature importance
 mean_coeficients = np.mean(cv_coefficients, axis=0).reshape(1, -1)
@@ -444,20 +443,20 @@ metrics_df.index.name = 'CV iteration'
 metrics_df.to_csv(experiment_dir / 'metrics.csv', index=True)
 
 # -----------------------------------------------------------------------------
-# SNIPPET 36
+# SNIPPET 35
 
 permutation_dir = experiment_dir / 'permutation'
 permutation_dir.mkdir(exist_ok=True)
 
 # --------------------------------------------------------------------------
-# SNIPPET 37
+# SNIPPET 36
 
 bac = np.mean(cv_test_bac, axis=0)[0]
 sens = np.mean(cv_test_sens, axis=0)[0]
 spec = np.mean(cv_test_spec, axis=0)[0]
 
 # --------------------------------------------------------------------------
-# SNIPPET 38
+# SNIPPET 37
 
 n_permutations = 5
 
@@ -470,13 +469,13 @@ for i_perm in range(n_permutations):
     print('Permutation: %d' % (i_perm+1))
 
 # --------------------------------------------------------------------------
-# SNIPPET 39
+# SNIPPET 38
 
     np.random.seed = i_perm
     targets_permuted = np.random.permutation(targets)
 
 # --------------------------------------------------------------------------
-# SNIPPET 40
+# SNIPPET 39
 
     n_folds = 10
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_seed)
@@ -527,7 +526,7 @@ for i_perm in range(n_permutations):
         cv_test_spec[i_fold, :] = test_spec
 
 # --------------------------------------------------------------------------
-# SNIPPET 41
+# SNIPPET 40
 
     test_bac = np.mean(cv_test_bac, axis=0)
     test_sens = np.mean(cv_test_sens, axis=0)
@@ -552,7 +551,7 @@ for i_perm in range(n_permutations):
 # Permutation: 4
 # Permutation: 5
 # --------------------------------------------------------------------------
-# SNIPPET 42
+# SNIPPET 41
 
 # Get p_values from metrics
 p_value_test_bac = (np.sum(perm_test_bac >= bac) + 1.0) / (n_permutations + 1)
@@ -574,7 +573,7 @@ print(p_value_test_bac)
 #  [0.49124693]]
 # 0.16666666666666666
 # --------------------------------------------------------------------------
-# SNIPPET 43
+# SNIPPET 42
 
 # Get p_values from coef
 coef_p_values = np.zeros((1, len(features_names)))
@@ -584,7 +583,7 @@ for i_feature in range(len(features_names)):
     coef_p_values[0, i_feature] = coef_p_value_temp
 
 # --------------------------------------------------------------------------
-# SNIPPET 44
+# SNIPPET 43
 
 # Saving
 perm_metrics_df = pd.DataFrame(data={'metric': ['bac', 'sens', 'spec'],
