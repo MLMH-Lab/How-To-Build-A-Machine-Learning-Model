@@ -23,13 +23,14 @@ from sklearn.model_selection import StratifiedKFold, GridSearchCV
 
 # Ignore WARNING
 import warnings
+
 warnings.filterwarnings('ignore')
 
 # --------------------------------------------------------------------------
 # SNIPPET 2
 
 random_seed = 1
-np.random.seed = random_seed
+np.random.seed(random_seed)
 
 # --------------------------------------------------------------------------
 # SNIPPET 3
@@ -44,8 +45,8 @@ experiment_dir.mkdir(exist_ok=True)
 # --------------------------------------------------------------------------
 # SNIPPET 4
 
-dataset_df = pd.read_csv('./Chapter_19_data.csv')
-dataset_df.set_index('ID', inplace=True)
+dataset_file = Path('./Chapter_19_data.csv')
+dataset_df = pd.read_csv(dataset_file, index_col='ID')
 
 # --------------------------------------------------------------------------
 # SNIPPET 5
@@ -58,13 +59,61 @@ female_str = 'F'
 # --------------------------------------------------------------------------
 # SNIPPET 6
 
-#>>> dataset_df[0:6]
+# >>> dataset_df[0:6]
+
+# Output
+#      Diagnosis Gender   Age  ...  rh temporalpole thickness  rh transversetemporal thickness  rh insula thickness
+# ID                           ...
+# c001        hc      M  22.0  ...                   2.235844                         2.300844             2.645844
+# c002        hc      F  24.0  ...                   2.622699                         2.322699             2.673699
+# c003        hc      F  22.0  ...                   2.232989                         2.267989             2.795989
+# c004        hc      F  30.0  ...                   1.956654                         2.297654             2.731654
+# c005        hc      M  31.0  ...                   3.162771                         2.081771             2.607771
+# c006        hc      F   NaN  ...                   3.512643                         2.591643             2.606643
+#
+# [6 rows x 172 columns]
 
 # --------------------------------------------------------------------------
 # SNIPPET 7
 
 # >>> dataset_df.columns.tolist()
 
+# Output
+# ['Diagnosis',
+#  'Gender',
+#  'Age',
+#  'Left Lateral Ventricle',
+#  'Left Inf Lat Vent',
+#  'Left Cerebellum White Matter',
+#  'Left Cerebellum Cortex',
+#  'Left Thalamus Proper',
+#  'Left Caudate',
+#  'Left Putamen',
+#  'Left Pallidum',
+#  'rd Ventricle',
+#  'th Ventricle',
+#  'Brain Stem',
+#  'Left Hippocampus',
+#  'Left Amygdala',
+#  'CSF',
+#  'Left Accumbens area',
+#  'Left VentralDC',
+# ...
+#  'rh pericalcarine thickness',
+#  'rh postcentral thickness',
+#  'rh posteriorcingulate thickness',
+#  'rh precentral thickness',
+#  'rh precuneus thickness',
+#  'rh rostralanteriorcingulate thickness',
+#  'rh rostralmiddlefrontal thickness',
+#  'rh superiorfrontal thickness',
+#  'rh superiorparietal thickness',
+#  'rh superiortemporal thickness',
+#  'rh supramarginal thickness',
+#  'rh frontalpole thickness',
+#  'rh temporalpole thickness',
+#  'rh transversetemporal thickness',
+#  'rh insula thickness']
 # --------------------------------------------------------------------------
 # SNIPPET 8
 
@@ -76,35 +125,22 @@ print('Number of participants = %d' % dataset_df.shape[0])
 # Number of participants = 740
 # --------------------------------------------------------------------------
 # SNIPPET 9
+null_lin_bool = dataset_df.isnull().any(axis=1)
+null_cols = dataset_df.columns[dataset_df.isnull().any(axis=0)]
 
-# RAFAEL DO REVIEW THIS FUNCTION
+n_null = dataset_df.isnull().sum().sum()
+print('Number of missing data = %d' % n_null)
+subj_null = dataset_df[null_lin_bool].index
+print('IDs: %s' % (', ').join(subj_null.tolist()))
+# >>> pd.DataFrame(dataset_df[null_cols].isnull().sum(), columns=['N missing'])
 
-def detect_nan(dataset):
-    nan_total = dataset.isnull().sum().sum()
-    if nan_total > 0:
-        for column in dataset:
-            #Find Ids with nan - THIS IS PROBABLY OVERLY COMPLICATED (all I want here is to get the Ids of where the nans are so I can print them later on)
-            nan = dataset[column].isnull()
-            dataset["nan"] = nan
-            ids = []
-            for i in dataset["nan"]:
-                if i == True:
-                    id_nan = dataset.loc[dataset['nan'] == True, 'ID']
-                    ids.append(id_nan)
-            #Calculate total number of nan for each feature and Id
-            nan_sum = nan.sum()
-            if nan_sum > 0:
-                print("Found", nan_sum, 'missing value(s) for', column, 'for Id(s):', *ids[0])
-        #dataset = dataset.drop(columns=["nan"])
-    else:
-        print('There are no missing data in this dataset!')
+# Output
+# Number of missing data = 43
+# IDs: c006, p149, p150, p156, p157, p175, p195, p196, p197, p210, p211, p212, p227, p228, p229, p264, p265, p266, p267, p268, p269, p270, p271, p281, p282, p283, p289, p302, p303, p307, p311, p312, p319, p321, p356, p357, p358, p359, p360, p361, p362, p363, p364
+#      N missing
+# Age         43
 # --------------------------------------------------------------------------
 # SNIPPET 10
-
-# >>> detect_nan(dataset_df)
-
-# --------------------------------------------------------------------------
-# SNIPPET 11
 
 dataset_df = dataset_df.dropna()
 print('Number of participants = %d' % dataset_df.shape[0])
@@ -112,7 +148,7 @@ print('Number of participants = %d' % dataset_df.shape[0])
 # Out
 # Number of participants = 697
 # --------------------------------------------------------------------------
-# SNIPPET 12
+# SNIPPET 11
 
 # >>> dataset_df['Diagnosis'].value_counts()
 
@@ -121,14 +157,14 @@ print('Number of participants = %d' % dataset_df.shape[0])
 # sz    330
 # Name: Diagnosis, dtype: int64
 # --------------------------------------------------------------------------
-# SNIPPET 13
+# SNIPPET 12
 
-ax = sns.countplot(x="Diagnosis", hue="Gender", data=dataset_df, palette=['#839098', '#f7d842'])
-plt.legend(["Male", "Female"])
+sns.countplot(x='Diagnosis', hue='Gender', data=dataset_df, palette=['#839098', '#f7d842'])
+plt.legend(['Male', 'Female'])
 plt.show()
 
 # --------------------------------------------------------------------------
-# SNIPPET 14
+# SNIPPET 13
 
 # Create the contingency table
 contingency_table = pd.crosstab(dataset_df['Gender'], dataset_df['Diagnosis'])
@@ -136,16 +172,18 @@ print(contingency_table)
 
 # Perform the homogeneity test
 chi2, p_value_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
-print('Gender - chi-square homogeneity test: chi2 statistic = %.4f p-value = %.4f' % (chi2, p_value_gender))
+print('Gender')
+print('Chi-square test: chi2 statistic = %.3f p-value = %.3f' % (chi2, p_value_gender))
 
 # Out
 # Diagnosis   hc   sz
 # Gender
 # F          162  121
 # M          205  209
-# Gender - chi-square homogeneity test: chi2 statistic = 4.0258 p-value = 0.0448
+# Gender
+# Chi-square test: chi2 statistic = 4.026 p-value = 0.045
 # --------------------------------------------------------------------------
-# SNIPPET 15
+# SNIPPET 14
 
 print('Removing participant to balance gender...')
 while p_value_gender < 0.05:
@@ -156,10 +194,11 @@ while p_value_gender < 0.05:
     # remove them from the data
     dataset_df = dataset_df.drop(indexes_to_remove)
     contingency_table = pd.crosstab(dataset_df['Gender'], dataset_df['Diagnosis'])
-    _, p_value_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
-    print('Gender p-value = %.3f' % p_value_gender)
+    chi2, p_value_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
+    print('new p-value = %.3f' % p_value_gender)
 
-print('Gender - chi-square homogeneity test: chi2 statistic = %.4f p-value = %.4f' % (chi2, p_value_gender))
+print('Gender')
+print('Chi-square test: chi2 statistic = %.3f p-value = %.3f' % (chi2, p_value_gender))
 
 # Check new sample size
 contingency_table = pd.crosstab(dataset_df['Gender'], dataset_df['Diagnosis'])
@@ -168,127 +207,136 @@ print(contingency_table)
 # Out
 # Removing participant to balance gender...
 # Droping c082
-# Gender p-value = 0.049
+# new p-value = 0.049
 # Droping c083
-#
-# Gender p-value = 0.054
-# Gender - chi-square homogeneity test: chi2 statistic = 4.0258 p-value = 0.0545
+# new p-value = 0.054
+# Gender
+# Chi-square test: chi2 statistic = 4.026 p-value = 0.054
 # Diagnosis   hc   sz
 # Gender
 # F          160  121
 # M          205  209
 # --------------------------------------------------------------------------
-# SNIPPET 16
+# SNIPPET 15
+
+age_hc = dataset_df[dataset_df['Diagnosis'] == healthy_str]['Age']
+age_sz = dataset_df[dataset_df['Diagnosis'] == patient_str]['Age']
 
 # Plot normal curve
-sns.kdeplot((dataset_df[dataset_df['Diagnosis'] == healthy_str]['Age']), color="#839098", label=('HC'), shade=True)
-sns.kdeplot((dataset_df[dataset_df['Diagnosis'] == patient_str]['Age']), color="#f7d842", label=('SZ'), shade=True)
+sns.kdeplot(age_hc,
+            color='#839098',
+            label='HC',
+            shade=True)
+sns.kdeplot(age_sz,
+            color='#f7d842',
+            label='SZ',
+            shade=True)
 plt.show()
 
 # Shapiro test for normality
-_, p_value_age_hc_normality = stats.shapiro(dataset_df[dataset_df['Diagnosis'] == healthy_str]['Age'])
-_, p_value_age_sz_normality = stats.shapiro(dataset_df[dataset_df['Diagnosis'] == patient_str]['Age'])
+_, p_value_age_hc_normality = stats.shapiro(age_hc)
+_, p_value_age_sz_normality = stats.shapiro(age_sz)
 
-print('Healthy control - Shapiro-Wilk Normality test: p-value = %.4f' % p_value_age_hc_normality)
-print('Patients - Shapiro-Wilk Normality test: p-value = %.4f' % p_value_age_sz_normality)
+print('HC: Normality test: p-value = %.3f' % p_value_age_hc_normality)
+print('SZ: Normality test: p-value = %.3f' % p_value_age_sz_normality)
 
 # Descriptives
-mean_hc, sd_hc = (dataset_df[dataset_df['Diagnosis'] == healthy_str]['Age']).describe().loc[['mean', 'std']]
-mean_sz, sd_sz = (dataset_df[dataset_df['Diagnosis'] == patient_str]['Age']).describe().loc[['mean', 'std']]
+mean_age_hc, sd_age_hc = age_hc.describe().loc[['mean', 'std']]
+mean_age_sz, sd_sz = age_sz.describe().loc[['mean', 'std']]
 
-print('HC: Mean(SD) = %.2f(%.2f)' % (mean_hc, sd_hc))
-print('SZ: Mean(SD) = %.2f(%.2f)' % (mean_sz, sd_sz))
-
+print('Age')
+print('HC: Mean(SD) = %.2f(%.2f)' % (mean_age_hc, sd_age_hc))
+print('SZ: Mean(SD) = %.2f(%.2f)' % (mean_age_sz, sd_sz))
 
 # Out
-# Healthy control - Shapiro-Wilk Normality test: p-value = 0.9620
-# Patients - Shapiro-Wilk Normality test: p-value = 0.7732
-# HC: Mean(SD) = 25.30(2.83)
-# SZ: Mean(SD) = 24.96(3.11)
+# HC: Normality test: p-value = 0.005
+# SZ: Normality test: p-value = 0.018
+# Age
+# HC: Mean(SD) = 25.31(2.84)
+# SZ: Mean(SD) = 24.98(3.12)
+# --------------------------------------------------------------------------
+# SNIPPET 16
+
+t_statistic, p_value_age = stats.ttest_ind(age_sz, age_hc)
+print('Age')
+print("Student's t test: t statistic = %.3f, p-value = %.3f" % (t_statistic, p_value_age))
+
+# Out
+# Age
+# Student's t test: t statistic = -1.464, p-value = 0.144
 # --------------------------------------------------------------------------
 # SNIPPET 17
-
-
-age_sz = dataset_df[dataset_df['Diagnosis'] == healthy_str]['Age']
-age_hc = dataset_df[dataset_df['Diagnosis'] == patient_str]['Age']
-
-statistic, p_value = stats.ttest_ind(age_sz, age_hc)
-print("Age - Student's t test: t statistic = %.4f, p-value = %.4f" % (statistic, p_value))
-
-# Out
-# Age - Student's t test: t statistic = 1.4896, p-value = 0.1368
-# --------------------------------------------------------------------------
-# SNIPPET 18
 
 features_names = dataset_df.columns[3:]
 features_df = dataset_df[features_names]
 targets_df = dataset_df['Diagnosis']
 
 # --------------------------------------------------------------------------
-# SNIPPET 19
+# SNIPPET 18
 
 features_df.to_csv(experiment_dir / 'prepared_features.csv')
 targets_df.to_csv(experiment_dir / 'prepared_targets.csv')
 
 # --------------------------------------------------------------------------
-# SNIPPET 20
+# SNIPPET 19
 
 targets_df = targets_df.map({healthy_str: 0, patient_str: 1})
-features = features_df.values.astype('float32')
 targets = targets_df.values.astype('int')
 
+features = features_df.values.astype('float32')
+
 # --------------------------------------------------------------------------
-# SNIPPET 21
+# SNIPPET 20
 
 n_folds = 10
 skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_seed)
 
 # --------------------------------------------------------------------------
-# SNIPPET 22
+# SNIPPET 21
 
 predictions_df = pd.DataFrame(targets_df)
 predictions_df['predictions'] = np.nan
 
-cv_test_bac = np.zeros((n_folds, 1))
-cv_test_sens = np.zeros((n_folds, 1))
-cv_test_spec = np.zeros((n_folds, 1))
-cv_coefficients = np.zeros((n_folds, len(features_names)))
+bac_cv = np.zeros((n_folds, 1))
+sens_cv = np.zeros((n_folds, 1))
+spec_cv = np.zeros((n_folds, 1))
+coef_cv = np.zeros((n_folds, len(features_names)))
 
 models_dir = experiment_dir / 'models'
 models_dir.mkdir(exist_ok=True)
 
 # --------------------------------------------------------------------------
-# SNIPPET 23
+# SNIPPET 22
 
 for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets)):
     features_train, features_test = features[train_index], features[test_index]
     targets_train, targets_test = targets[train_index], targets[test_index]
 
-    print("CV iteration: %d" % (i_fold + 1))
-    print("Training set size: %d" % len(targets_train))
-    print("Test set size: %d" % len(targets_test))
+    print('CV iteration: %d' % (i_fold + 1))
+    print('Training set size: %d' % len(targets_train))
+    print('Test set size: %d' % len(targets_test))
 
-# Out
-# CV iteration: 1
-# Training set size: 625
-# Test set size: 70
-# --------------------------------------------------------------------------
-# SNIPPET 24
+    # Out
+    # CV iteration: 1
+    # Training set size: 625
+    # Test set size: 70
+    # --------------------------------------------------------------------------
+    # SNIPPET 23
 
     scaler = StandardScaler()
 
     scaler.fit(features_train)
 
-    features_train_normalized = scaler.transform(features_train)
-    features_test_normalized = scaler.transform(features_test)
+    features_train_norm = scaler.transform(features_train)
+    features_test_norm = scaler.transform(features_test)
 
-# --------------------------------------------------------------------------
-# SNIPPET 25
+    # --------------------------------------------------------------------------
+    # SNIPPET 24
 
     clf = LinearSVC(loss='hinge')
 
-# --------------------------------------------------------------------------
-# SNIPPET 26
+    # --------------------------------------------------------------------------
+    # SNIPPET 25
 
     # Hyperparameter seach space
     param_grid = {'C': [2 ** -6, 2 ** -5, 2 ** -4, 2 ** -3, 2 ** -2, 2 ** -1, 2 ** 0, 2 ** 1]}
@@ -301,196 +349,203 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
                            scoring='balanced_accuracy',
                            verbose=2)
 
-# --------------------------------------------------------------------------
-# SNIPPET 27
+    # --------------------------------------------------------------------------
+    # SNIPPET 26
 
-    grid_result = grid_cv.fit(features_train_normalized, targets_train)
-# Out
-# Fitting 10 folds for each of 8 candidates, totalling 80 fits
-# [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.0s remaining:    0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.015625 ......................................................
-# [CV] ....................................... C=0.015625, total=   0.0s
-# [CV] C=0.03125 .......................................................
-# [CV] ........................................ C=0.03125, total=   0.1s
-# [CV] C=0.03125 .......................................................
-# [CV] ........................................ C=0.03125, total=   0.1s
-# [CV] C=0.03125 .......................................................
-# [CV] ........................................ C=0.03125, total=   0.1s
-# [CV] C=0.03125 .......................................................
-# [CV] ........................................ C=0.03125, total=   0.2s
-# ...
-# [CV] C=2 .............................................................
-# [CV] .............................................. C=2, total=   0.2s
-# [CV] C=2 .............................................................
-# [CV] .............................................. C=2, total=   0.3s
-# [Parallel(n_jobs=1)]: Done  80 out of  80 | elapsed:   16.6s finished
-# --------------------------------------------------------------------------
-# SNIPPET 28
+    grid_result = grid_cv.fit(features_train_norm, targets_train)
+    # Out
+    # Fitting 10 folds for each of 8 candidates, totalling 80 fits
+    # [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.0s remaining:    0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.015625 ......................................................
+    # [CV] ....................................... C=0.015625, total=   0.0s
+    # [CV] C=0.03125 .......................................................
+    # [CV] ........................................ C=0.03125, total=   0.1s
+    # [CV] C=0.03125 .......................................................
+    # [CV] ........................................ C=0.03125, total=   0.1s
+    # [CV] C=0.03125 .......................................................
+    # [CV] ........................................ C=0.03125, total=   0.1s
+    # [CV] C=0.03125 .......................................................
+    # [CV] ........................................ C=0.03125, total=   0.2s
+    # ...
+    # [CV] C=2 .............................................................
+    # [CV] .............................................. C=2, total=   0.2s
+    # [CV] C=2 .............................................................
+    # [CV] .............................................. C=2, total=   0.3s
+    # [Parallel(n_jobs=1)]: Done  80 out of  80 | elapsed:   16.6s finished
+    # --------------------------------------------------------------------------
+    # SNIPPET 27
 
-    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    print('Best: %f using %s' % (grid_result.best_score_, grid_result.best_params_))
     means = grid_result.cv_results_['mean_test_score']
     stds = grid_result.cv_results_['std_test_score']
     params = grid_result.cv_results_['params']
 
     for mean, stdev, param in zip(means, stds, params):
-        print("%f (%f) with: %r" % (mean, stdev, param))
+        print('%f (%f) with: %r' % (mean, stdev, param))
 
-# Out
-# Best: 0.674068 using {'C': 0.03125}
-# 0.673129 (0.076206) with: {'C': 0.015625}
-# 0.674068 (0.091944) with: {'C': 0.03125}
-# 0.669891 (0.090721) with: {'C': 0.0625}
-# 0.672431 (0.079949) with: {'C': 0.125}
-# 0.671058 (0.081584) with: {'C': 0.25}
-# 0.667469 (0.066472) with: {'C': 0.5}
-# 0.659122 (0.061582) with: {'C': 1}
-# 0.666941 (0.075792) with: {'C': 2}
-# --------------------------------------------------------------------------
-# SNIPPET 29
+    # Out
+    # Best: 0.675791 using {'C': 0.125}
+    # 0.673129 (0.076206) with: {'C': 0.015625}
+    # 0.674068 (0.091944) with: {'C': 0.03125}
+    # 0.668388 (0.089292) with: {'C': 0.0625}
+    # 0.675791 (0.077299) with: {'C': 0.125}
+    # 0.669378 (0.083826) with: {'C': 0.25}
+    # 0.662557 (0.057900) with: {'C': 0.5}
+    # 0.653957 (0.060696) with: {'C': 1}
+    # 0.657501 (0.067748) with: {'C': 2}
+
+    # --------------------------------------------------------------------------
+    # SNIPPET 28
 
     best_clf = grid_cv.best_estimator_
 
-    joblib.dump(best_clf, models_dir / ('classifier_%d.joblib'%i_fold))
+    joblib.dump(best_clf, models_dir / ('classifier_%d.joblib' % i_fold))
     joblib.dump(scaler, models_dir / ('scaler_%d.joblib' % i_fold))
 
-# --------------------------------------------------------------------------
-# SNIPPET 30
-    coef_abs_value = np.abs(best_clf.coef_)
-    cv_coefficients[i_fold, :] = coef_abs_value
+    # --------------------------------------------------------------------------
+    # SNIPPET 29
+    coef_cv[i_fold, :] = np.abs(best_clf.coef_)
 
-# --------------------------------------------------------------------------
-# SNIPPET 31
-    target_test_predicted = best_clf.predict(features_test_normalized)
+    # --------------------------------------------------------------------------
+    # SNIPPET 30
+    target_test_predicted = best_clf.predict(features_test_norm)
 
     for row, value in zip(test_index, target_test_predicted):
         predictions_df.iloc[row, predictions_df.columns.get_loc('predictions')] = value
 
-# --------------------------------------------------------------------------
-# SNIPPET 32
+    # --------------------------------------------------------------------------
+    # SNIPPET 31
 
-    print("Confusion matrix")
+    print('Confusion matrix')
     cm = confusion_matrix(targets_test, target_test_predicted)
     print(cm)
-    print("")
 
     tn, fp, fn, tp = cm.ravel()
 
-    test_bac = balanced_accuracy_score(targets_test, target_test_predicted)
-    test_sens = tp / (tp + fn)
-    test_spec = tn / (tn + fp)
+    bac_test = balanced_accuracy_score(targets_test, target_test_predicted)
+    sens_test = tp / (tp + fn)
+    spec_test = tn / (tn + fp)
 
-    print("Balanced accuracy: %.4f " % (test_bac))
-    print("Sensitivity: %.4f " % (test_sens))
-    print("Specificity: %.4f " % (test_spec))
+    print('Balanced accuracy: %.3f ' % bac_test)
+    print('Sensitivity: %.3f ' % sens_test)
+    print('Specificity: %.3f ' % spec_test)
 
-    cv_test_bac[i_fold, :] = test_bac
-    cv_test_sens[i_fold, :] = test_sens
-    cv_test_spec[i_fold, :] = test_spec
+    bac_cv[i_fold, :] = bac_test
+    sens_cv[i_fold, :] = sens_test
+    spec_cv[i_fold, :] = spec_test
 
 # Out
 # Confusion matrix
-# [[30  7]
+# [[31  6]
 #  [10 23]]
-#
-# Balanced accuracy: 0.7539
-# Sensitivity: 0.6970
-# Specificity: 0.8108
+# Balanced accuracy: 0.767
+# Sensitivity: 0.697
+# Specificity: 0.837
+# --------------------------------------------------------------------------
+# SNIPPET 32
+
+print('CV results')
+print('Bac: Mean(SD) = %.3f(%.3f)' % (bac_cv.mean(), bac_cv.std()))
+print('Sens: Mean(SD) = %.3f(%.3f)' % (sens_cv.mean(), sens_cv.std()))
+print('Spec: Mean(SD) = %.3f(%.3f)' % (spec_cv.mean(), spec_cv.std()))
+
+# Out
+# CV results
+# Bac: Mean(SD) = 0.744(0.046)
+# Sens: Mean(SD) = 0.718(0.078)
+# Spec: Mean(SD) = 0.770(0.063)
 # --------------------------------------------------------------------------
 # SNIPPET 33
 
-print("Cross-validation Balanced accuracy: %.4f +- %.4f" % (cv_test_bac.mean(), cv_test_bac.std()))
-print("Cross-validation Sensitivity: %.4f +- %.4f" % (cv_test_sens.mean(), cv_test_sens.std()))
-print("Cross-validation Specificity: %.4f +- %.4f" % (cv_test_spec.mean(), cv_test_spec.std()))
-
-# Out
-# Cross-validation Balanced accuracy: 0.7469 +- 0.0401
-# Cross-validation Sensitivity: 0.7182 +- 0.0755
-# Cross-validation Specificity: 0.7756 +- 0.0612
-# --------------------------------------------------------------------------
-# SNIPPET 34
-
 # Saving feature importance
-mean_coeficients = np.mean(cv_coefficients, axis=0).reshape(1, -1)
-model_coef_df = pd.DataFrame(data=mean_coeficients, columns=features_names.values)
-model_coef_df.to_csv(experiment_dir / 'feature_importance.csv', index=False)
+mean_coef = np.mean(coef_cv, axis=0).reshape(1, -1)
+
+coef_df = pd.DataFrame(data=mean_coef, columns=features_names.values)
+coef_df.to_csv(experiment_dir / 'feature_importance.csv', index=False)
 
 # Saving predictions
-predictions_df.to_csv(experiment_dir / "predictions.csv", index=True)
+predictions_df.to_csv(experiment_dir / 'predictions.csv', index=True)
 
 # Saving metrics
-metrics = np.concatenate((cv_test_bac, cv_test_sens, cv_test_spec), axis=1)
+metrics = np.concatenate((bac_cv, sens_cv, spec_cv), axis=1)
 metrics_df = pd.DataFrame(data=metrics, columns=['bac', 'sens', 'spec'])
 metrics_df.index.name = 'CV iteration'
 metrics_df.to_csv(experiment_dir / 'metrics.csv', index=True)
 
 # -----------------------------------------------------------------------------
-# SNIPPET 35
+# SNIPPET 34
 
 permutation_dir = experiment_dir / 'permutation'
 permutation_dir.mkdir(exist_ok=True)
 
 # --------------------------------------------------------------------------
-# SNIPPET 36
+# SNIPPET 35
 
-bac = np.mean(cv_test_bac, axis=0)[0]
-sens = np.mean(cv_test_sens, axis=0)[0]
-spec = np.mean(cv_test_spec, axis=0)[0]
+bac_from_model = np.mean(bac_cv, axis=0)[0]
+sens_from_model = np.mean(sens_cv, axis=0)[0]
+spec_from_model = np.mean(spec_cv, axis=0)[0]
 
 # --------------------------------------------------------------------------
-# SNIPPET 37
+# SNIPPET 36
 
 n_permutations = 5
 
-perm_test_bac = np.zeros((n_permutations, 1))
-perm_test_sens = np.zeros((n_permutations, 1))
-perm_test_spec = np.zeros((n_permutations, 1))
-perm_abs_coef = np.zeros((n_permutations, len(features_names)))
-
-for i_perm in range(n_permutations):
-    print('Permutation: %d' % (i_perm+1))
+bac_perm = np.zeros((n_permutations, 1))
+sens_perm = np.zeros((n_permutations, 1))
+spec_perm = np.zeros((n_permutations, 1))
+coef_perm = np.zeros((n_permutations, len(features_names)))
 
 # --------------------------------------------------------------------------
-# SNIPPET 38
+# SNIPPET 37
+for i_perm in range(n_permutations):
+    print('Permutation: %d' % (i_perm + 1))
 
-    np.random.seed = i_perm
+    np.random.seed(i_perm)
     targets_permuted = np.random.permutation(targets)
 
-# --------------------------------------------------------------------------
-# SNIPPET 39
+    # Out
+    # Permutation: 1
+    # Permutation: 2
+    # Permutation: 3
+    # Permutation: 4
+    # Permutation: 5
+    # --------------------------------------------------------------------------
+    # SNIPPET 38
 
     n_folds = 10
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_seed)
 
-    cv_test_bac = np.zeros((n_folds, 1))
-    cv_test_sens = np.zeros((n_folds, 1))
-    cv_test_spec = np.zeros((n_folds, 1))
-    cv_coefficients = np.zeros((n_folds, len(features_names)))
+    bac_cv = np.zeros((n_folds, 1))
+    sens_cv = np.zeros((n_folds, 1))
+    spec_cv = np.zeros((n_folds, 1))
+    coef_cv = np.zeros((n_folds, len(features_names)))
 
     for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets_permuted)):
         features_train, features_test = features[train_index], features[test_index]
         targets_train, targets_test = targets_permuted[train_index], targets_permuted[test_index]
 
         scaler = StandardScaler()
-        features_train_normalized = scaler.fit_transform(features_train)
+        features_train_norm = scaler.fit_transform(features_train)
+        features_test_norm = scaler.transform(features_test)
 
         clf = LinearSVC(loss='hinge')
 
@@ -503,98 +558,88 @@ for i_perm in range(n_permutations):
                                scoring='balanced_accuracy',
                                verbose=0)
 
-        grid_result = grid_cv.fit(features_train_normalized, targets_train)
+        grid_result = grid_cv.fit(features_train_norm, targets_train)
 
         best_clf = grid_cv.best_estimator_
 
-        coef_abs_value = np.abs(best_clf.coef_)
-        cv_coefficients[i_fold, :] = coef_abs_value
+        coef_cv[i_fold, :] = np.abs(best_clf.coef_)
 
-        features_test_normalized = scaler.transform(features_test)
-        target_test_predicted = best_clf.predict(features_test_normalized)
+        target_test_predicted = best_clf.predict(features_test_norm)
 
         cm = confusion_matrix(targets_test, target_test_predicted)
 
         tn, fp, fn, tp = cm.ravel()
 
-        test_bac = balanced_accuracy_score(targets_test, target_test_predicted)
-        test_sens = tp / (tp + fn)
-        test_spec = tn / (tn + fp)
+        bac_test = balanced_accuracy_score(targets_test, target_test_predicted)
+        sens_test = tp / (tp + fn)
+        spec_test = tn / (tn + fp)
 
-        cv_test_bac[i_fold, :] = test_bac
-        cv_test_sens[i_fold, :] = test_sens
-        cv_test_spec[i_fold, :] = test_spec
+        bac_cv[i_fold, :] = bac_test
+        sens_cv[i_fold, :] = sens_test
+        spec_cv[i_fold, :] = spec_test
+
+    # --------------------------------------------------------------------------
+    # SNIPPET 39
+
+    np.save(permutation_dir / ('perm_test_bac_%03d.npy' % i_perm), bac_cv.mean())
+    np.save(permutation_dir / ('perm_test_sens_%03d.npy' % i_perm), sens_cv.mean())
+    np.save(permutation_dir / ('perm_test_spec_%03d.npy' % i_perm), spec_cv.mean())
+    np.save(permutation_dir / ('perm_coef_%03d.npy' % i_perm), coef_cv.mean(axis=0))
+
+    bac_perm[i_perm, :] = bac_cv.mean()
+    sens_perm[i_perm, :] = sens_cv.mean()
+    spec_perm[i_perm, :] = spec_cv.mean()
+    coef_perm[i_perm, :] = coef_cv.mean(axis=0)
 
 # --------------------------------------------------------------------------
 # SNIPPET 40
 
-    test_bac = np.mean(cv_test_bac, axis=0)
-    test_sens = np.mean(cv_test_sens, axis=0)
-    test_spec = np.mean(cv_test_spec, axis=0)
+# Get p_values from metrics
+bac_p_value = (np.sum(bac_perm >= bac_from_model) + 1) / (n_permutations + 1)
+sens_p_value = (np.sum(sens_perm >= sens_from_model) + 1) / (n_permutations + 1)
+spec_p_value = (np.sum(spec_perm >= spec_from_model) + 1) / (n_permutations + 1)
 
-    abs_coef = np.mean(cv_coefficients, axis=0)
-
-    np.save(permutation_dir / ('perm_test_bac_%3d.npy' % i_perm), perm_test_bac)
-    np.save(permutation_dir / ('perm_test_sens_%3d.npy' % i_perm), perm_test_sens)
-    np.save(permutation_dir / ('perm_test_spec_%3d.npy' % i_perm), perm_test_spec)
-    np.save(permutation_dir / ('perm_coef_%3d.npy' % i_perm), perm_abs_coef)
-
-    perm_test_bac[i_perm, :] = test_bac
-    perm_test_sens[i_perm, :] = test_sens
-    perm_test_spec[i_perm, :] = test_spec
-    perm_abs_coef[i_perm, :] = abs_coef
+print('BAC = %.3f' % bac_from_model)
+print('BAC permutation:')
+print(bac_perm)
+print('BAC: p_value = %.3f' % bac_p_value)
 
 # Out
-# Permutation: 1
-# Permutation: 2
-# Permutation: 3
-# Permutation: 4
-# Permutation: 5
+# BAC = 0.744
+# BAC permutation:
+# [[0.50208163]
+#  [0.51334289]
+#  [0.43107767]
+#  [0.50531327]
+#  [0.50008531]]
+# BAC: p_value = 0.167
+
 # --------------------------------------------------------------------------
 # SNIPPET 41
-
-# Get p_values from metrics
-p_value_test_bac = (np.sum(perm_test_bac >= bac) + 1.0) / (n_permutations + 1)
-p_value_test_sens = (np.sum(perm_test_sens >= sens) + 1.0) / (n_permutations + 1)
-p_value_test_spec = (np.sum(perm_test_spec >= spec) + 1.0) / (n_permutations + 1)
-
-print('BAC = %.4f' % bac)
-print('BAC permutation:')
-print(perm_test_bac)
-print(p_value_test_bac)
-
-# Out
-# BAC = 0.7469
-# BAC permutation:
-# [[0.52588043]
-#  [0.51834562]
-#  [0.51162299]
-#  [0.51740718]
-#  [0.49124693]]
-# 0.16666666666666666
-# --------------------------------------------------------------------------
-# SNIPPET 42
 
 # Get p_values from coef
 coef_p_values = np.zeros((1, len(features_names)))
 for i_feature in range(len(features_names)):
-    coef_p_value_temp = (np.sum(perm_abs_coef[:, i_feature] >= mean_coeficients[0, i_feature]) + 1.0) / (
-                n_permutations + 1)
-    coef_p_values[0, i_feature] = coef_p_value_temp
+    coef_value_from_perm = coef_perm[:, i_feature]
+    coef_value_from_model = mean_coef[0, i_feature]
+
+    n_perm_better_model = np.sum(coef_value_from_perm >= coef_value_from_model)
+
+    coef_p_values[0, i_feature] = (n_perm_better_model + 1) / (n_permutations + 1)
 
 # --------------------------------------------------------------------------
-# SNIPPET 43
+# SNIPPET 42
 
 # Saving
 perm_metrics_df = pd.DataFrame(data={'metric': ['bac', 'sens', 'spec'],
-                                     'value': [bac, sens, spec],
-                                     'p_value': [p_value_test_bac,
-                                                 p_value_test_sens,
-                                                 p_value_test_spec]})
+                                     'value': [bac_from_model, sens_from_model, spec_from_model],
+                                     'p_value': [bac_p_value,
+                                                 sens_p_value,
+                                                 spec_p_value]})
 
 perm_metrics_df.to_csv(experiment_dir / 'metrics_permutation_pvalue.csv', index=False)
 
 coef_df = pd.DataFrame(index=['coefficients', 'p value'],
-                       data=np.concatenate((mean_coeficients, coef_p_values)),
+                       data=np.concatenate((mean_coef, coef_p_values)),
                        columns=features_names)
 coef_df.to_csv(experiment_dir / 'coef_permutation_pvalue.csv', index=True)
