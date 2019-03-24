@@ -187,11 +187,12 @@ print('Chi-square test: chi2 stats = %.3f p-value = %.3f' % (chi2, p_gender))
 
 print('Removing participant to balance gender...')
 while p_gender < 0.05:
-    # Select one female controls at random and get their indexes
-    scz_women = dataset_df[(dataset_df['Diagnosis'] == healthy_str) & (dataset_df['Gender'] == female_str)]
-    indexes_to_remove = scz_women.sample(n=1, random_state=1).index
+    # Randomly select a woman from healthy controls
+    hc_women = dataset_df[(dataset_df['Diagnosis'] == healthy_str) & (dataset_df['Gender'] == female_str)]
+    indexes_to_remove = hc_women.sample(n=1, random_state=1).index
+
+    # Remove her from dataset
     print('Droping %s' % str(indexes_to_remove.values[0]))
-    # remove them from the data
     dataset_df = dataset_df.drop(indexes_to_remove)
     contingency_table = pd.crosstab(dataset_df['Gender'], dataset_df['Diagnosis'])
     chi2, p_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
@@ -241,12 +242,9 @@ print('HC: Normality test: p-value = %.3f' % p_age_hc_normality)
 print('SZ: Normality test: p-value = %.3f' % p_age_sz_normality)
 
 # Descriptives
-mean_age_hc, sd_age_hc = age_hc.describe().loc[['mean', 'std']]
-mean_age_sz, sd_sz = age_sz.describe().loc[['mean', 'std']]
-
 print('Age')
-print('HC: Mean(SD) = %.2f(%.2f)' % (mean_age_hc, sd_age_hc))
-print('SZ: Mean(SD) = %.2f(%.2f)' % (mean_age_sz, sd_sz))
+print('HC: Mean(SD) = %.2f(%.2f)' % (age_hc.mean(), age_hc.std()))
+print('SZ: Mean(SD) = %.2f(%.2f)' % (age_sz.mean(), age_sz.std()))
 
 # Out
 # HC: Normality test: p-value = 0.005
@@ -259,17 +257,40 @@ print('SZ: Mean(SD) = %.2f(%.2f)' % (mean_age_sz, sd_sz))
 
 t_stats, p_age = stats.ttest_ind(age_sz, age_hc)
 print('Age')
-print("Student's t test: t stats = %.3f, p-value = %.3f" % (t_stats, p_age))
+print("Student's t-test: t stats = %.3f, p-value = %.3f" % (t_stats, p_age))
 
 # Out
 # Age
-# Student's t test: t stats = -1.464, p-value = 0.144
+# Student's t-test: t stats = -1.464, p-value = 0.144
 # --------------------------------------------------------------------------
 # SNIPPET 17
+# Target
+targets_df = dataset_df['Diagnosis']
 
+# Features
 features_names = dataset_df.columns[3:]
 features_df = dataset_df[features_names]
-targets_df = dataset_df['Diagnosis']
+# >>> features_df
+
+# Out
+# ID
+# c001    hc
+# c002    hc
+#         ..
+# p370    sz
+# p371    sz
+# p372    sz
+# Name: Diagnosis, Length: 695, dtype: object
+
+#       Left Lateral Ventricle  ...  rh insula thickness
+# ID                            ...
+# c001             4226.907844  ...             2.645844
+# c002             4954.912699  ...             2.673699
+#                       ...  ...                  ...
+# p370             3607.623866  ...             3.066604
+# p371             8276.575805  ...             2.631420
+# p372             5170.559424  ...             3.330186
+# [695 rows x 169 columns]
 
 # --------------------------------------------------------------------------
 # SNIPPET 18
@@ -338,7 +359,7 @@ for i_fold, (train_idx, test_idx) in enumerate(skf.split(features, targets)):
     # --------------------------------------------------------------------------
     # SNIPPET 25
 
-    # Hyperparameter seach space
+    # Hyper-parameter search space
     param_grid = {'C': [2 ** -6, 2 ** -5, 2 ** -4, 2 ** -3, 2 ** -2, 2 ** -1, 2 ** 0, 2 ** 1]}
 
     # Gridsearch
