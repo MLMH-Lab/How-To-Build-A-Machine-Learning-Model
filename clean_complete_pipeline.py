@@ -308,9 +308,9 @@ models_dir.mkdir(exist_ok=True)
 # --------------------------------------------------------------------------
 # SNIPPET 22
 
-for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets)):
-    features_train, features_test = features[train_index], features[test_index]
-    targets_train, targets_test = targets[train_index], targets[test_index]
+for i_fold, (train_idx, test_idx) in enumerate(skf.split(features, targets)):
+    features_train, features_test = features[train_idx], features[test_idx]
+    targets_train, targets_test = targets[train_idx], targets[test_idx]
 
     print('CV iteration: %d' % (i_fold + 1))
     print('Training set size: %d' % len(targets_train))
@@ -347,7 +347,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
                            param_grid=param_grid,
                            cv=internal_cv,
                            scoring='balanced_accuracy',
-                           verbose=2)
+                           verbose=1)
 
     # --------------------------------------------------------------------------
     # SNIPPET 26
@@ -356,41 +356,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
     # Out
     # Fitting 10 folds for each of 8 candidates, totalling 80 fits
     # [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.0s remaining:    0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.015625 ......................................................
-    # [CV] ....................................... C=0.015625, total=   0.0s
-    # [CV] C=0.03125 .......................................................
-    # [CV] ........................................ C=0.03125, total=   0.1s
-    # [CV] C=0.03125 .......................................................
-    # [CV] ........................................ C=0.03125, total=   0.1s
-    # [CV] C=0.03125 .......................................................
-    # [CV] ........................................ C=0.03125, total=   0.1s
-    # [CV] C=0.03125 .......................................................
-    # [CV] ........................................ C=0.03125, total=   0.2s
-    # ...
-    # [CV] C=2 .............................................................
-    # [CV] .............................................. C=2, total=   0.2s
-    # [CV] C=2 .............................................................
-    # [CV] .............................................. C=2, total=   0.3s
-    # [Parallel(n_jobs=1)]: Done  80 out of  80 | elapsed:   16.6s finished
+    # [Parallel(n_jobs=1)]: Done  80 out of  80 | elapsed:    8.3s finished
     # --------------------------------------------------------------------------
     # SNIPPET 27
 
@@ -429,7 +395,7 @@ for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets))
     # SNIPPET 30
     target_test_predicted = best_clf.predict(features_test_norm)
 
-    for row, value in zip(test_index, target_test_predicted):
+    for row, value in zip(test_idx, target_test_predicted):
         predictions_df.iloc[row, predictions_df.columns.get_loc('predictions')] = value
 
     # --------------------------------------------------------------------------
@@ -539,9 +505,9 @@ for i_perm in range(n_permutations):
     spec_cv = np.zeros((n_folds, 1))
     coef_cv = np.zeros((n_folds, len(features_names)))
 
-    for i_fold, (train_index, test_index) in enumerate(skf.split(features, targets_permuted)):
-        features_train, features_test = features[train_index], features[test_index]
-        targets_train, targets_test = targets_permuted[train_index], targets_permuted[test_index]
+    for i_fold, (train_idx, test_idx) in enumerate(skf.split(features, targets_permuted)):
+        features_train, features_test = features[train_idx], features[test_idx]
+        targets_train, targets_test = targets_permuted[train_idx], targets_permuted[test_idx]
 
         scaler = StandardScaler()
         features_train_norm = scaler.fit_transform(features_train)
