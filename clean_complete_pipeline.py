@@ -171,9 +171,9 @@ contingency_table = pd.crosstab(dataset_df['Gender'], dataset_df['Diagnosis'])
 print(contingency_table)
 
 # Perform the homogeneity test
-chi2, p_value_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
+chi2, p_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
 print('Gender')
-print('Chi-square test: chi2 statistic = %.3f p-value = %.3f' % (chi2, p_value_gender))
+print('Chi-square test: chi2 stats = %.3f p-value = %.3f' % (chi2, p_gender))
 
 # Out
 # Diagnosis   hc   sz
@@ -186,7 +186,7 @@ print('Chi-square test: chi2 statistic = %.3f p-value = %.3f' % (chi2, p_value_g
 # SNIPPET 14
 
 print('Removing participant to balance gender...')
-while p_value_gender < 0.05:
+while p_gender < 0.05:
     # Select one female controls at random and get their indexes
     scz_women = dataset_df[(dataset_df['Diagnosis'] == healthy_str) & (dataset_df['Gender'] == female_str)]
     indexes_to_remove = scz_women.sample(n=1, random_state=1).index
@@ -194,11 +194,11 @@ while p_value_gender < 0.05:
     # remove them from the data
     dataset_df = dataset_df.drop(indexes_to_remove)
     contingency_table = pd.crosstab(dataset_df['Gender'], dataset_df['Diagnosis'])
-    chi2, p_value_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
-    print('new p-value = %.3f' % p_value_gender)
+    chi2, p_gender, _, _ = stats.chi2_contingency(contingency_table, correction=False)
+    print('new p-value = %.3f' % p_gender)
 
 print('Gender')
-print('Chi-square test: chi2 statistic = %.3f p-value = %.3f' % (chi2, p_value_gender))
+print('Chi-square test: chi2 stats = %.3f p-value = %.3f' % (chi2, p_gender))
 
 # Check new sample size
 contingency_table = pd.crosstab(dataset_df['Gender'], dataset_df['Diagnosis'])
@@ -234,11 +234,11 @@ sns.kdeplot(age_sz,
 plt.show()
 
 # Shapiro test for normality
-_, p_value_age_hc_normality = stats.shapiro(age_hc)
-_, p_value_age_sz_normality = stats.shapiro(age_sz)
+_, p_age_hc_normality = stats.shapiro(age_hc)
+_, p_age_sz_normality = stats.shapiro(age_sz)
 
-print('HC: Normality test: p-value = %.3f' % p_value_age_hc_normality)
-print('SZ: Normality test: p-value = %.3f' % p_value_age_sz_normality)
+print('HC: Normality test: p-value = %.3f' % p_age_hc_normality)
+print('SZ: Normality test: p-value = %.3f' % p_age_sz_normality)
 
 # Descriptives
 mean_age_hc, sd_age_hc = age_hc.describe().loc[['mean', 'std']]
@@ -257,9 +257,9 @@ print('SZ: Mean(SD) = %.2f(%.2f)' % (mean_age_sz, sd_sz))
 # --------------------------------------------------------------------------
 # SNIPPET 16
 
-t_statistic, p_value_age = stats.ttest_ind(age_sz, age_hc)
+t_stats, p_age = stats.ttest_ind(age_sz, age_hc)
 print('Age')
-print("Student's t test: t statistic = %.3f, p-value = %.3f" % (t_statistic, p_value_age))
+print("Student's t test: t stats = %.3f, p-value = %.3f" % (t_stats, p_age))
 
 # Out
 # Age
@@ -466,9 +466,9 @@ permutation_dir.mkdir(exist_ok=True)
 # --------------------------------------------------------------------------
 # SNIPPET 35
 
-bac_from_model = np.mean(bac_cv, axis=0)[0]
-sens_from_model = np.mean(sens_cv, axis=0)[0]
-spec_from_model = np.mean(spec_cv, axis=0)[0]
+bac_from_model = bac_cv.mean()
+sens_from_model = sens_cv.mean()
+spec_from_model = spec_cv.mean()
 
 # --------------------------------------------------------------------------
 # SNIPPET 36
@@ -598,7 +598,9 @@ for i_feature in range(len(features_names)):
 
 # Saving
 perm_metrics_df = pd.DataFrame(data={'metric': ['bac', 'sens', 'spec'],
-                                     'value': [bac_from_model, sens_from_model, spec_from_model],
+                                     'value': [bac_from_model,
+                                               sens_from_model,
+                                               spec_from_model],
                                      'p_value': [bac_p_value,
                                                  sens_p_value,
                                                  spec_p_value]})
