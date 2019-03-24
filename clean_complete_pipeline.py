@@ -565,20 +565,11 @@ bac_p_value = (np.sum(bac_perm >= bac_from_model) + 1) / (n_permutations + 1)
 sens_p_value = (np.sum(sens_perm >= sens_from_model) + 1) / (n_permutations + 1)
 spec_p_value = (np.sum(spec_perm >= spec_from_model) + 1) / (n_permutations + 1)
 
-print('BAC = %.3f' % bac_from_model)
-print('BAC permutation:')
-print(bac_perm)
 print('BAC: p_value = %.3f' % bac_p_value)
+print('SENS: p_value = %.3f' % sens_p_value)
+print('SPEC: p_value = %.3f' % spec_p_value)
 
 # Out
-# BAC = 0.744
-# BAC permutation:
-# [[0.50208163]
-#  [0.51334289]
-#  [0.43107767]
-#  [0.50531327]
-#  [0.50008531]]
-# BAC: p_value = 0.167
 
 # --------------------------------------------------------------------------
 # SNIPPET 41
