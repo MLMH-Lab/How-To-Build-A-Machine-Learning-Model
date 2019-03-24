@@ -181,7 +181,7 @@ print('Chi-square test: chi2 stats = %.3f p-value = %.3f' % (chi2, p_gender))
 # F          162  121
 # M          205  209
 # Gender
-# Chi-square test: chi2 statistic = 4.026 p-value = 0.045
+# Chi-square test: chi2 stats = 4.026 p-value = 0.045
 # --------------------------------------------------------------------------
 # SNIPPET 14
 
@@ -211,7 +211,7 @@ print(contingency_table)
 # Droping c083
 # new p-value = 0.054
 # Gender
-# Chi-square test: chi2 statistic = 4.026 p-value = 0.054
+# Chi-square test: chi2 stats = 3.698 p-value = 0.054
 # Diagnosis   hc   sz
 # Gender
 # F          160  121
@@ -263,7 +263,7 @@ print("Student's t test: t stats = %.3f, p-value = %.3f" % (t_stats, p_age))
 
 # Out
 # Age
-# Student's t test: t statistic = -1.464, p-value = 0.144
+# Student's t test: t stats = -1.464, p-value = 0.144
 # --------------------------------------------------------------------------
 # SNIPPET 17
 
@@ -565,9 +565,9 @@ bac_p_value = (np.sum(bac_perm >= bac_from_model) + 1) / (n_permutations + 1)
 sens_p_value = (np.sum(sens_perm >= sens_from_model) + 1) / (n_permutations + 1)
 spec_p_value = (np.sum(spec_perm >= spec_from_model) + 1) / (n_permutations + 1)
 
-print('BAC: p_value = %.3f' % bac_p_value)
-print('SENS: p_value = %.3f' % sens_p_value)
-print('SPEC: p_value = %.3f' % spec_p_value)
+print('BAC: p-value = %.3f' % bac_p_value)
+print('SENS: p-value = %.3f' % sens_p_value)
+print('SPEC: p-value = %.3f' % spec_p_value)
 
 # Out
 
