@@ -607,6 +607,25 @@ for i_feature in range(len(features_names)):
 
 # --------------------------------------------------------------------------
 # SNIPPET 42
+coef_df = pd.DataFrame(index=['coefficients', 'p value'],
+                       data=np.concatenate((mean_coef, coef_p_values)),
+                       columns=features_names)
+
+coef_df.sort_values('coefficients', axis=1, ascending=False).T
+#                                        coefficients   p value
+# lh middletemporal thickness                0.847839  0.166667
+# rd Ventricle                               0.637437  0.166667
+# Right Amygdala                             0.634389  0.166667
+# lh parahippocampal thickness               0.600662  0.166667
+# lh middletemporal volume                   0.425772  0.166667
+# rh parahippocampal thickness               0.388391  0.166667
+#                                              ...       ...
+# rh paracentral volume                      0.027262  1.000000
+# rh caudalmiddlefrontal volume              0.026706  1.000000
+# [169 rows x 2 columns]
+
+# --------------------------------------------------------------------------
+# SNIPPET 43
 
 # Saving
 perm_metrics_df = pd.DataFrame(data={'metric': ['bac', 'sens', 'spec'],
@@ -619,7 +638,4 @@ perm_metrics_df = pd.DataFrame(data={'metric': ['bac', 'sens', 'spec'],
 
 perm_metrics_df.to_csv(experiment_dir / 'metrics_permutation_pvalue.csv', index=False)
 
-coef_df = pd.DataFrame(index=['coefficients', 'p value'],
-                       data=np.concatenate((mean_coef, coef_p_values)),
-                       columns=features_names)
 coef_df.to_csv(experiment_dir / 'coef_permutation_pvalue.csv', index=True)
