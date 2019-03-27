@@ -494,7 +494,7 @@ spec_from_model = spec_cv.mean()
 # --------------------------------------------------------------------------
 # SNIPPET 36
 
-n_permutations = 5
+n_permutations = 1000
 
 bac_perm = np.zeros((n_permutations, 1))
 sens_perm = np.zeros((n_permutations, 1))
@@ -512,9 +512,9 @@ for i_perm in range(n_permutations):
     # Out
     # Permutation: 1
     # Permutation: 2
-    # Permutation: 3
-    # Permutation: 4
-    # Permutation: 5
+    # ...
+    # Permutation: 999
+    # Permutation: 1000
     # --------------------------------------------------------------------------
     # SNIPPET 38
 
@@ -591,6 +591,9 @@ print('SENS: p-value = %.3f' % sens_p_value)
 print('SPEC: p-value = %.3f' % spec_p_value)
 
 # Out
+# BAC: p-value = 0.001
+# SENS: p-value = 0.001
+# SPEC: p-value = 0.001
 
 # --------------------------------------------------------------------------
 # SNIPPET 41
@@ -613,16 +616,70 @@ coef_df = pd.DataFrame(index=['coefficients', 'p value'],
 
 coef_df.sort_values('coefficients', axis=1, ascending=False).T
 #                                        coefficients   p value
-# lh middletemporal thickness                0.847839  0.166667
-# rd Ventricle                               0.637437  0.166667
-# Right Amygdala                             0.634389  0.166667
-# lh parahippocampal thickness               0.600662  0.166667
-# lh middletemporal volume                   0.425772  0.166667
-# rh parahippocampal thickness               0.388391  0.166667
-#                                              ...       ...
-# rh paracentral volume                      0.027262  1.000000
-# rh caudalmiddlefrontal volume              0.026706  1.000000
+# lh middletemporal thickness                0.874659  0.000999
+# Right Amygdala                             0.669204  0.000999
+# rd Ventricle                               0.666117  0.000999
+# lh parahippocampal thickness               0.633003  0.000999
+# lh middletemporal volume                   0.446395  0.005994
+# rh parahippocampal thickness               0.399505  0.002997
+# Left Hippocampus                           0.385345  0.038961
+# Left Amygdala                              0.341837  0.033966
+# lh medialorbitofrontal thickness           0.302409  0.043956
+# lh rostralanteriorcingulate thickness      0.296009  0.066933
+# rh superiorfrontal volume                  0.293653  0.144855
+# Left Lateral Ventricle                     0.290743  0.130869
+# lh superiortemporal thickness              0.271665  0.156843
+# Right Inf Lat Vent                         0.270630  0.027972
+# lh superiorfrontal volume                  0.267993  0.222777
+# lh entorhinal volume                       0.261595  0.045954
+# rh middletemporal thickness                0.260725  0.114885
+# lh lateralorbitofrontal thickness          0.255078  0.051948
+# rh inferiorparietal thickness              0.243987  0.155844
+# rh posteriorcingulate thickness            0.216218  0.153846
+# lh inferiortemporal thickness              0.215602  0.243756
+# Right Putamen                              0.210489  0.234765
+# Right Lateral Ventricle                    0.209847  0.229770
+# rh caudalmiddlefrontal thickness           0.204056  0.200799
+# Right Cerebellum Cortex                    0.203949  0.428571
+# rh supramarginal thickness                 0.203500  0.205794
+# lh lingual thickness                       0.201817  0.217782
+# lh inferiorparietal thickness              0.201337  0.246753
+# Left Cerebellum White Matter               0.198363  0.169830
+# rh rostralanteriorcingulate thickness      0.194115  0.181818
+# ...                                             ...       ...
+# rh superiortemporal thickness              0.050132  0.969031
+# rh parstriangularis volume                 0.049586  0.918082
+# Left VentralDC                             0.049546  0.970030
+# rh insula thickness                        0.049258  0.948052
+# Right Accumbens area                       0.049049  0.902098
+# lh frontalpole thickness                   0.046189  0.912088
+# lh parsopercularis thickness               0.044927  0.969031
+# lh medialorbitofrontal volume              0.044199  0.965035
+# lh parsorbitalis volume                    0.043566  0.960040
+# CC Posterior                               0.042929  0.957043
+# lh lingual volume                          0.042138  0.978022
+# lh rostralanteriorcingulate volume         0.041540  0.968032
+# rh fusiform thickness                      0.041450  0.976024
+# CC Mid Anterior                            0.041361  0.974026
+# rh caudalanteriorcingulate thickness       0.040758  0.971029
+# lh postcentral thickness                   0.039892  0.985015
+# CC Mid Posterior                           0.038851  0.979021
+# lh precentral volume                       0.038629  0.984016
+# rh frontalpole volume                      0.037627  0.969031
+# rh inferiorparietal volume                 0.037339  0.988012
+# rh lateraloccipital thickness              0.036707  0.988012
+# rh inferiortemporal volume                 0.036688  0.988012
+# lh isthmuscingulate thickness              0.036416  0.983017
+# lh supramarginal volume                    0.036188  0.990010
+# lh cuneus thickness                        0.034470  0.988012
+# lh postcentral volume                      0.034056  0.992008
+# rh caudalmiddlefrontal volume              0.032140  0.987013
+# rh fusiform volume                         0.030958  0.997003
+# rh paracentral volume                      0.028124  0.998002
+# rh lateralorbitofrontal volume             0.027997  1.000000
+#
 # [169 rows x 2 columns]
+
 
 # --------------------------------------------------------------------------
 # SNIPPET 43
