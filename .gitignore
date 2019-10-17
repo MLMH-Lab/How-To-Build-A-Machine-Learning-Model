@@ -1,0 +1,11 @@
+# Pycharm
+.idea/
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
