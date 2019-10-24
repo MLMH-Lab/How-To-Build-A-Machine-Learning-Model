@@ -22,7 +22,7 @@
       "contributions": [
         "review"
       ]
-    },     
+    },
     {
       "login": "garciadias",
       "name": "R. Garcia-Dias",
@@ -30,6 +30,16 @@
       "profile": "https://garciadias.github.io",
       "contributions": [
         "code"
+      ]
+    },
+    {
+      "login": "sandramv",
+      "name": "sandramv",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/56369962?v=4",
+      "profile": "https://github.com/sandramv",
+      "contributions": [
+        "code",
+        "ideas"
       ]
     }
   ],
