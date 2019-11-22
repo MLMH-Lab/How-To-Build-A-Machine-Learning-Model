@@ -3,7 +3,7 @@
 
 Code for Chapter 19 -  A Step-By-Step Tutorial On How To Build A Machine Learning Model from [Machine Learning: Methods and Applications to Brain Disorders](https://www.sciencedirect.com/book/9780128157398/machine-learning)
 
-**Access the iterative code in Google colab!**  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MLMH-Lab/How-To-Build-A-Machine-Learning-Model/blob/master/chapter_19_script.ipynb)
+**Access the interactive code in Google colab!**  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MLMH-Lab/How-To-Build-A-Machine-Learning-Model/blob/master/chapter_19_script.ipynb)
 
 ## Contributors ✨
 
